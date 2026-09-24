@@ -31,16 +31,16 @@ const sections = [
   },
 ]
 
-function Sidebar({ activeId, onSelect }) {
+function Sidebar({ activeId, onSelect, onAccount }) {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-navy text-white">
-      <div className="flex items-center gap-3 px-5 pb-3 pt-4">
+      <button type="button" onClick={onAccount} className="flex items-center gap-3 px-5 pb-3 pt-4 text-left">
         <span className="flex size-10 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
           BB
         </span>
         <span className="min-w-0 flex-1 truncate text-sm font-medium">Ben Bradle</span>
         <ChevronIcon />
-      </div>
+      </button>
 
       <nav className="min-h-0 flex-1 overflow-y-auto pb-2" aria-label="Library">
         <NavButton

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
 import ForYou from './components/ForYou.jsx'
@@ -15,14 +16,20 @@ function App() {
   const [view, setView] = useState('grid')
   const [sectionId, setSectionId] = useState('discover')
   const [selectedTitle, setSelectedTitle] = useState(null)
+  const [authMode, setAuthMode] = useState(null)
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
+
+  if (authMode) {
+    return <AuthScreen mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} />
+  }
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-canvas p-3 font-sans text-ink sm:p-5 md:p-6">
       <div className="flex h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-window bg-white shadow-window sm:h-[calc(100svh-2.5rem)] md:h-[calc(100svh-3rem)]">
         <Sidebar
           activeId={sectionId}
+          onAccount={() => setAuthMode('login')}
           onSelect={(id) => {
             setSectionId(id)
             setQuery('')
