@@ -1,15 +1,128 @@
 export const catalog = [
-  { title: 'The Design of Everyday Things', author: 'Don Norman', rating: 5, swatch: 'from-sky-500 to-blue-900', groups: ['physical', 'reading-now', 'quiet'] },
-  { title: 'Clean Code', author: 'Robert C. Martin', rating: 4, swatch: 'from-indigo-500 to-slate-900', groups: ['ebooks', 'saved', 'research'] },
-  { title: 'The Pragmatic Programmer', author: 'David Thomas', rating: 5, swatch: 'from-emerald-500 to-teal-900', groups: ['ebooks', 'saved'] },
-  { title: 'Algorithms to Live By', author: 'Brian Christian', rating: 4, swatch: 'from-amber-500 to-orange-900', groups: ['audio', 'due-soon'] },
-  { title: 'Structure and Interpretation', author: 'Harold Abelson', rating: 5, swatch: 'from-rose-500 to-red-950', groups: ['papers', 'research'] },
-  { title: 'Deep Work', author: 'Cal Newport', rating: 5, swatch: 'from-sky-400 to-blue-800', groups: ['ebooks', 'reading-now', 'quiet'] },
-  { title: 'Atomic Habits', author: 'James Clear', rating: 4, swatch: 'from-amber-300 to-orange-700', groups: ['audio', 'saved', 'quiet'] },
-  { title: 'Thinking, Fast and Slow', author: 'Daniel Kahneman', rating: 5, swatch: 'from-slate-400 to-slate-800', groups: ['papers', 'due-soon', 'history'] },
-  { title: 'The Art of Computer Programming', author: 'Donald Knuth', rating: 5, swatch: 'from-rose-400 to-red-900', groups: ['physical', 'classics'] },
-  { title: 'Gödel, Escher, Bach', author: 'Douglas Hofstadter', rating: 4, swatch: 'from-emerald-400 to-teal-800', groups: ['videos', 'classics'] },
+  {
+    title: 'The Design of Everyday Things',
+    author: 'Don Norman',
+    year: 2013,
+    rating: 5,
+    swatch: 'from-sky-500 to-blue-900',
+    groups: ['physical', 'reading-now', 'quiet'],
+    description: 'How everyday objects communicate, and why good design makes them easier to use.',
+    copies: [
+      { code: 'PHY-014', status: 'BORROWED', location: 'On loan' },
+      { code: 'PHY-015', status: 'AVAILABLE', location: 'Shelf A3' },
+    ],
+  },
+  {
+    title: 'Clean Code',
+    author: 'Robert C. Martin',
+    year: 2008,
+    rating: 4,
+    swatch: 'from-indigo-500 to-slate-900',
+    groups: ['ebooks', 'saved', 'research'],
+    description: 'A handbook of agile software craftsmanship for writing code that stays readable.',
+    copies: [{ code: 'DIG-102', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'The Pragmatic Programmer',
+    author: 'David Thomas',
+    year: 2019,
+    rating: 5,
+    swatch: 'from-emerald-500 to-teal-900',
+    groups: ['ebooks', 'saved'],
+    description: 'Practical habits for building software that is easier to change and maintain.',
+    copies: [{ code: 'DIG-118', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'Algorithms to Live By',
+    author: 'Brian Christian',
+    year: 2016,
+    rating: 4,
+    swatch: 'from-amber-500 to-orange-900',
+    groups: ['audio', 'due-soon'],
+    description: 'Computer science ideas applied to everyday decisions, from sorting to stopping.',
+    copies: [{ code: 'AUD-021', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'Structure and Interpretation',
+    author: 'Harold Abelson',
+    year: 1996,
+    rating: 5,
+    swatch: 'from-rose-500 to-red-950',
+    groups: ['papers', 'research'],
+    description: 'A classic introduction to programming through abstraction and recursion.',
+    copies: [{ code: 'PAP-044', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'Deep Work',
+    author: 'Cal Newport',
+    year: 2016,
+    rating: 5,
+    swatch: 'from-sky-400 to-blue-800',
+    groups: ['ebooks', 'reading-now', 'quiet'],
+    description: 'Rules for focused success in a distracted world.',
+    copies: [{ code: 'DIG-130', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'Atomic Habits',
+    author: 'James Clear',
+    year: 2018,
+    rating: 4,
+    swatch: 'from-amber-300 to-orange-700',
+    groups: ['audio', 'saved', 'quiet'],
+    description: 'A practical guide to building better habits through small changes.',
+    copies: [{ code: 'AUD-033', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'Thinking, Fast and Slow',
+    author: 'Daniel Kahneman',
+    year: 2011,
+    rating: 5,
+    swatch: 'from-slate-400 to-slate-800',
+    groups: ['papers', 'due-soon', 'history'],
+    description: 'How two modes of thought shape judgment and decision making.',
+    copies: [{ code: 'PAP-051', status: 'AVAILABLE', location: 'Online' }],
+  },
+  {
+    title: 'The Art of Computer Programming',
+    author: 'Donald Knuth',
+    year: 1968,
+    rating: 5,
+    swatch: 'from-rose-400 to-red-900',
+    groups: ['physical', 'classics'],
+    description: 'A foundational reference on algorithms and their analysis.',
+    copies: [
+      { code: 'PHY-201', status: 'AVAILABLE', location: 'Shelf C1' },
+      { code: 'PHY-202', status: 'MAINTENANCE', location: 'Repair' },
+    ],
+  },
+  {
+    title: 'Gödel, Escher, Bach',
+    author: 'Douglas Hofstadter',
+    year: 1979,
+    rating: 4,
+    swatch: 'from-emerald-400 to-teal-800',
+    groups: ['videos', 'classics'],
+    description: 'An exploration of patterns, meaning, and self-reference.',
+    copies: [{ code: 'VID-008', status: 'AVAILABLE', location: 'Online' }],
+  },
 ]
+
+const formatLabels = {
+  ebooks: 'E-book',
+  papers: 'Research paper',
+  videos: 'Video',
+  audio: 'Audio book',
+  physical: 'Physical book',
+}
+
+export function formatOf(book) {
+  const group = book.groups.find((item) => formatLabels[item])
+  return formatLabels[group]
+}
+
+export function bookByTitle(title) {
+  return catalog.find((book) => book.title === title)
+}
 
 export const sectionLabels = {
   ebooks: 'E-books',

@@ -1,4 +1,4 @@
-function SearchResults({ query, results, view }) {
+function SearchResults({ query, results, view, onOpen }) {
   return (
     <section className="px-6" aria-label="Search results">
       <h2 className="text-lg font-semibold">Results for “{query.trim()}”</h2>
@@ -11,23 +11,25 @@ function SearchResults({ query, results, view }) {
       ) : view === 'list' ? (
         <ul className="mt-5 divide-y divide-slate-100">
           {results.map((book) => (
-            <li key={book.title} className="flex items-center gap-4 py-3">
-              <span className={`size-12 shrink-0 rounded-md bg-linear-to-br ${book.swatch}`} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{book.title}</p>
-                <p className="truncate text-xs text-muted">{book.author}</p>
-              </div>
+            <li key={book.title}>
+              <button type="button" onClick={() => onOpen(book.title)} className="flex w-full items-center gap-4 py-3 text-left">
+                <span className={`size-12 shrink-0 rounded-md bg-linear-to-br ${book.swatch}`} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{book.title}</p>
+                  <p className="truncate text-xs text-muted">{book.author}</p>
+                </div>
+              </button>
             </li>
           ))}
         </ul>
       ) : (
         <div className="mt-5 grid grid-cols-4 gap-4">
           {results.map((book) => (
-            <article key={book.title} className="min-w-0">
+            <button key={book.title} type="button" onClick={() => onOpen(book.title)} className="min-w-0 text-left">
               <div className={`aspect-[3/4] rounded-lg bg-linear-to-br ${book.swatch}`} />
               <h3 className="mt-2 truncate text-sm font-medium">{book.title}</h3>
               <p className="truncate text-xs text-muted">{book.author}</p>
-            </article>
+            </button>
           ))}
         </div>
       )}

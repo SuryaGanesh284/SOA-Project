@@ -40,7 +40,7 @@ const arrivals = [
 
 const visibleCount = 3
 
-function NewArrivals() {
+function NewArrivals({ onOpen }) {
   const [start, setStart] = useState(0)
   const visible = Array.from({ length: visibleCount }, (_, index) => {
     return arrivals[(start + index) % arrivals.length]
@@ -77,6 +77,7 @@ function NewArrivals() {
       <div className="grid grid-cols-3 gap-4">
         {visible.map((book) => (
           <article key={book.title} className="relative h-40 overflow-hidden rounded-xl text-white">
+            <button type="button" onClick={() => onOpen(book.title)} className="absolute inset-0 z-10" aria-label={book.title} />
             <div className={`absolute inset-0 bg-linear-to-br ${book.swatch}`} />
             <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4">
