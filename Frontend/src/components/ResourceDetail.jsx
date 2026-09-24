@@ -1,7 +1,9 @@
 import { formatOf } from '../data/catalog.js'
+import { copyStatus } from '../data/loans.js'
 
-function ResourceDetail({ book, onBack }) {
-  const available = book.copies.filter((copy) => copy.status === 'AVAILABLE').length
+function ResourceDetail({ book, loans, onBack, onBorrow }) {
+  const copies = book.copies.map((copy) => ({ ...copy, status: copyStatus(copy, loans) }))
+  const available = copies.filter((copy) => copy.status === 'AVAILABLE').length
 
   return (
     <section className="px-6" aria-label={book.title}>
@@ -25,12 +27,20 @@ function ResourceDetail({ book, onBack }) {
           <p className="mt-4 text-sm font-medium">
             {available} of {book.copies.length} available
           </p>
+          <button
+            type="button"
+            onClick={onBorrow}
+            disabled={available === 0}
+            className="mt-4 h-10 rounded-xl bg-navy px-4 text-sm font-medium text-white disabled:opacity-40"
+          >
+            {available === 0 ? 'No copies available' : 'Borrow'}
+          </button>
         </div>
       </div>
 
       <h3 className="mt-8 text-lg font-semibold">Copies</h3>
       <ul className="mt-3 divide-y divide-slate-100">
-        {book.copies.map((copy) => (
+        {copies.map((copy) => (
           <li key={copy.code} className="flex items-center justify-between py-3 text-sm">
             <span className="font-medium">{copy.code}</span>
             <span className="text-muted">{copy.location}</span>

@@ -47,7 +47,7 @@ const adminSections = [
   },
 ]
 
-function Sidebar({ activeId, onSelect, onAccount, onSignOut, user }) {
+function Sidebar({ activeId, onSelect, onAccount, onSignOut, user, activeLoan }) {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-navy text-white">
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
@@ -90,15 +90,15 @@ function Sidebar({ activeId, onSelect, onAccount, onSignOut, user }) {
         ))}
       </nav>
 
-      {user?.role === 'ADMIN' ? null : (
-      <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-navy-raised px-2.5 py-2">
+      {user?.role === 'ADMIN' || !activeLoan ? null : (
+      <button type="button" onClick={() => onSelect('reading-now')} className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-navy-raised px-2.5 py-2 text-left">
         <span className="size-9 shrink-0 rounded-md bg-linear-to-br from-sky-400 to-blue-700" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium">The Design of Everyday Things</p>
-          <p className="truncate text-[11px] text-white/50">Due in 4 days</p>
-        </div>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-medium">{activeLoan.title}</span>
+          <span className="block truncate text-[11px] text-white/50">Due {activeLoan.dueAt}</span>
+        </span>
         <span className="size-2 shrink-0 rounded-full bg-cyan" aria-hidden="true" />
-      </div>
+      </button>
       )}
     </aside>
   )

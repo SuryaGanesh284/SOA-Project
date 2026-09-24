@@ -3,6 +3,7 @@ import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
 import ForYou from './components/ForYou.jsx'
+import LoansPage from './components/LoansPage.jsx'
 import NewArrivals from './components/NewArrivals.jsx'
 import ResourceDetail from './components/ResourceDetail.jsx'
 import SearchResults from './components/SearchResults.jsx'
@@ -10,6 +11,7 @@ import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, searchCatalog, sectionLabels } from './data/catalog.js'
+import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, signIn } from './data/session.js'
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
   const [selectedTitle, setSelectedTitle] = useState(null)
   const [authMode, setAuthMode] = useState(null)
   const [session, setSession] = useState(() => loadSession())
+  const [loans, setLoans] = useState(() => loadLoans())
+  const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
 
@@ -52,6 +56,7 @@ function App() {
           activeId={sectionId}
           user={session}
           onAccount={() => setAuthMode('login')}
+          activeLoan={activeLoan}
           onSignOut={() => {
             clearSession()
             setSession(null)
@@ -82,7 +87,21 @@ function App() {
                 <p className="mt-1 text-sm text-muted">Signed in as {session.name}.</p>
               </section>
             ) : selectedBook ? (
-              <ResourceDetail book={selectedBook} onBack={() => setSelectedTitle(null)} />
+              <ResourceDetail
+                book={selectedBook}
+                loans={loans}
+                onBack={() => setSelectedTitle(null)}
+                onBorrow={() => {
+                  const result = borrowTitle(loans, selectedBook.title)
+                  if (result.loans) setLoans(result.loans)
+                }}
+              />
+            ) : sectionId === 'reading-now' ? (
+              <LoansPage
+                loans={loans}
+                onOpen={setSelectedTitle}
+                onReturn={(loanId) => setLoans(returnLoan(loans, loanId))}
+              />
             ) : searching ? (
               <SearchResults query={query} results={searchCatalog(query)} view={view} onOpen={setSelectedTitle} />
             ) : sectionId !== 'discover' ? (
