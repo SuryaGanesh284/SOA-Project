@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 const sections = [
   {
     id: 'library',
@@ -33,9 +31,7 @@ const sections = [
   },
 ]
 
-function Sidebar() {
-  const [activeId, setActiveId] = useState('discover')
-
+function Sidebar({ activeId, onSelect }) {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-navy text-white">
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
@@ -51,7 +47,7 @@ function Sidebar() {
           active={activeId === 'discover'}
           icon="spark"
           label="Discover"
-          onClick={() => setActiveId('discover')}
+          onClick={() => onSelect('discover')}
         />
 
         {sections.map((section) => (
@@ -64,7 +60,7 @@ function Sidebar() {
                 icon={item.icon}
                 label={item.label}
                 swatch={item.swatch}
-                onClick={() => setActiveId(item.id)}
+                onClick={() => onSelect(item.id)}
               />
             ))}
           </div>
