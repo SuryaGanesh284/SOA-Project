@@ -1,8 +1,4 @@
-import { useState } from 'react'
-
-function TopBar() {
-  const [view, setView] = useState('grid')
-
+function TopBar({ query, onQueryChange, view, onViewChange }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
       <label className="flex h-10 w-full max-w-sm items-center gap-2 rounded-full bg-field px-4 text-muted">
@@ -11,6 +7,8 @@ function TopBar() {
           type="search"
           placeholder="Search"
           aria-label="Search"
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
         />
       </label>
@@ -19,14 +17,14 @@ function TopBar() {
         <IconButton
           label="Grid view"
           active={view === 'grid'}
-          onClick={() => setView('grid')}
+          onClick={() => onViewChange('grid')}
         >
           <GridIcon />
         </IconButton>
         <IconButton
           label="List view"
           active={view === 'list'}
-          onClick={() => setView('list')}
+          onClick={() => onViewChange('list')}
         >
           <ListIcon />
         </IconButton>
