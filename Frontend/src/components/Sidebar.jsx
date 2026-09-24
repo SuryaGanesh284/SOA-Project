@@ -31,26 +31,49 @@ const sections = [
   },
 ]
 
-function Sidebar({ activeId, onSelect, onAccount }) {
+const adminSections = [
+  {
+    id: 'admin',
+    label: 'Administration',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'spark' },
+      { id: 'users', label: 'Users', icon: 'document' },
+      { id: 'catalog', label: 'Catalog', icon: 'book' },
+      { id: 'copies', label: 'Copies', icon: 'copy' },
+      { id: 'borrows', label: 'Borrows', icon: 'book' },
+      { id: 'fines', label: 'Fines', icon: 'document' },
+      { id: 'requirements', label: 'Requirements', icon: 'document' },
+    ],
+  },
+]
+
+function Sidebar({ activeId, onSelect, onAccount, onSignOut, user }) {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-navy text-white">
-      <button type="button" onClick={onAccount} className="flex items-center gap-3 px-5 pb-3 pt-4 text-left">
-        <span className="flex size-10 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
-          BB
-        </span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">Ben Bradle</span>
+      <div className="flex items-center gap-3 px-5 pb-3 pt-4">
+        <button type="button" onClick={user ? onSignOut : onAccount} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
+            {initials(user?.name || 'Ben Bradle')}
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium">{user?.name || 'Ben Bradle'}</span>
+            <span className="block text-[11px] text-white/50">{user ? 'Sign out' : 'Sign in'}</span>
+          </span>
+        </button>
         <ChevronIcon />
-      </button>
+      </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto pb-2" aria-label="Library">
-        <NavButton
-          active={activeId === 'discover'}
-          icon="spark"
-          label="Discover"
-          onClick={() => onSelect('discover')}
-        />
+        {user?.role === 'ADMIN' ? null : (
+          <NavButton
+            active={activeId === 'discover'}
+            icon="spark"
+            label="Discover"
+            onClick={() => onSelect('discover')}
+          />
+        )}
 
-        {sections.map((section) => (
+        {(user?.role === 'ADMIN' ? adminSections : sections).map((section) => (
           <div key={section.id}>
             <p className="px-5 pb-1 pt-3 text-[13px] font-medium text-white/45">{section.label}</p>
             {section.items.map((item) => (
@@ -67,6 +90,7 @@ function Sidebar({ activeId, onSelect, onAccount }) {
         ))}
       </nav>
 
+      {user?.role === 'ADMIN' ? null : (
       <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-navy-raised px-2.5 py-2">
         <span className="size-9 shrink-0 rounded-md bg-linear-to-br from-sky-400 to-blue-700" />
         <div className="min-w-0 flex-1">
@@ -75,6 +99,7 @@ function Sidebar({ activeId, onSelect, onAccount }) {
         </div>
         <span className="size-2 shrink-0 rounded-full bg-cyan" aria-hidden="true" />
       </div>
+      )}
     </aside>
   )
 }
@@ -97,6 +122,15 @@ function NavButton({ active, icon, label, swatch, onClick }) {
       <span className="truncate">{label}</span>
     </button>
   )
+}
+
+function initials(name) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
 }
 
 function ChevronIcon() {

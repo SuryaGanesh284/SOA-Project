@@ -1,13 +1,16 @@
 import { useState } from 'react'
 
-function AuthScreen({ mode, onModeChange, onClose }) {
+function AuthScreen({ mode, onModeChange, onClose, onSignIn, onRegister }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const isRegister = mode === 'register'
 
   function handleSubmit(event) {
     event.preventDefault()
+    const result = isRegister ? onRegister(name, email, password) : onSignIn(email, password)
+    if (result.error) setError(result.error)
   }
 
   return (
@@ -25,10 +28,18 @@ function AuthScreen({ mode, onModeChange, onClose }) {
           ) : null}
           <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
           <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete={isRegister ? 'new-password' : 'current-password'} />
+          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
           <button type="submit" className="h-11 w-full rounded-xl bg-navy text-sm font-medium text-white">
             {isRegister ? 'Register' : 'Sign in'}
           </button>
         </form>
+        {isRegister ? null : (
+          <p className="mt-4 text-xs leading-5 text-muted">
+            User: user@archivalia.test / user123
+            <br />
+            Admin: admin@archivalia.test / admin123
+          </p>
+        )}
 
         <p className="mt-5 text-sm text-muted">
           {isRegister ? 'Already have an account?' : 'New to Archivalia?'}{' '}

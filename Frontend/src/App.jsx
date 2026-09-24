@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, searchCatalog, sectionLabels } from './data/catalog.js'
+import { clearSession, loadSession, register, signIn } from './data/session.js'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -17,11 +18,31 @@ function App() {
   const [sectionId, setSectionId] = useState('discover')
   const [selectedTitle, setSelectedTitle] = useState(null)
   const [authMode, setAuthMode] = useState(null)
+  const [session, setSession] = useState(() => loadSession())
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
 
+  function enter(result) {
+    if (result.session) {
+      setSession(result.session)
+      setAuthMode(null)
+      setQuery('')
+      setSelectedTitle(null)
+      setSectionId(result.session.role === 'ADMIN' ? 'dashboard' : 'discover')
+    }
+    return result
+  }
+
   if (authMode) {
-    return <AuthScreen mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} />
+    return (
+      <AuthScreen
+        mode={authMode}
+        onModeChange={setAuthMode}
+        onClose={() => setAuthMode(null)}
+        onSignIn={(email, password) => enter(signIn(email, password))}
+        onRegister={(name, email, password) => enter(register(name, email, password))}
+      />
+    )
   }
 
   return (
@@ -29,7 +50,13 @@ function App() {
       <div className="flex h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-window bg-white shadow-window sm:h-[calc(100svh-2.5rem)] md:h-[calc(100svh-3rem)]">
         <Sidebar
           activeId={sectionId}
+          user={session}
           onAccount={() => setAuthMode('login')}
+          onSignOut={() => {
+            clearSession()
+            setSession(null)
+            setSectionId('discover')
+          }}
           onSelect={(id) => {
             setSectionId(id)
             setQuery('')
@@ -47,7 +74,14 @@ function App() {
             onViewChange={setView}
           />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-            {selectedBook ? (
+            {session?.role === 'ADMIN' ? (
+              <section className="px-6" aria-label="Admin shell">
+                <h2 className="text-lg font-semibold">
+                  {sectionId === 'dashboard' ? 'Dashboard' : sectionId[0].toUpperCase() + sectionId.slice(1)}
+                </h2>
+                <p className="mt-1 text-sm text-muted">Signed in as {session.name}.</p>
+              </section>
+            ) : selectedBook ? (
               <ResourceDetail book={selectedBook} onBack={() => setSelectedTitle(null)} />
             ) : searching ? (
               <SearchResults query={query} results={searchCatalog(query)} view={view} onOpen={setSelectedTitle} />
