@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: #e6ebf2;
+  --color-navy: #1c2433;
+  --color-navy-raised: #262f41;
+  --color-cyan: #3ec6e0;
+  --color-ink: #1c2433;
+  --color-muted: #8b93a7;
+  --radius-window: 20px;
+  --shadow-window: 0 18px 50px rgb(28 36 51 / 0.12);
+}
