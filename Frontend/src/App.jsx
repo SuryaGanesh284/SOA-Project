@@ -1,3 +1,4 @@
+import NewArrivals from './components/NewArrivals.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 
@@ -8,6 +9,9 @@ function App() {
         <Sidebar />
         <main aria-label="Library window" className="flex min-w-0 flex-1 flex-col bg-white">
           <TopBar />
+          <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+            <NewArrivals />
+          </div>
         </main>
       </div>
     </div>
