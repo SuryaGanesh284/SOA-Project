@@ -46,7 +46,7 @@ function Sidebar() {
         <ChevronIcon />
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto pb-4" aria-label="Library">
+      <nav className="min-h-0 flex-1 overflow-y-auto pb-2" aria-label="Library">
         <NavButton
           active={activeId === 'discover'}
           icon="spark"
@@ -56,7 +56,7 @@ function Sidebar() {
 
         {sections.map((section) => (
           <div key={section.id}>
-            <p className="px-5 pb-1 pt-4 text-[13px] font-medium text-white/45">{section.label}</p>
+            <p className="px-5 pb-1 pt-3 text-[13px] font-medium text-white/45">{section.label}</p>
             {section.items.map((item) => (
               <NavButton
                 key={item.id}
@@ -70,6 +70,15 @@ function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-navy-raised px-2.5 py-2">
+        <span className="size-9 shrink-0 rounded-md bg-linear-to-br from-sky-400 to-blue-700" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium">The Design of Everyday Things</p>
+          <p className="truncate text-[11px] text-white/50">Due in 4 days</p>
+        </div>
+        <span className="size-2 shrink-0 rounded-full bg-cyan" aria-hidden="true" />
+      </div>
     </aside>
   )
 }
