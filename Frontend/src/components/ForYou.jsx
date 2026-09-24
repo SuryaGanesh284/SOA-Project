@@ -8,9 +8,9 @@ const suggestions = [
 
 function ForYou() {
   return (
-    <section className="mt-8 px-6" aria-label="For you">
+    <section aria-label="For you">
       <h2 className="mb-3 text-lg font-semibold">For you</h2>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {suggestions.map((book) => (
           <article key={book.title} className="min-w-0">
             <div className={`aspect-[3/4] rounded-lg bg-linear-to-br ${book.swatch}`} />

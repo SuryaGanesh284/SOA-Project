@@ -1,7 +1,9 @@
+import Collections from './components/Collections.jsx'
 import ForYou from './components/ForYou.jsx'
 import NewArrivals from './components/NewArrivals.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
+import Trending from './components/Trending.jsx'
 
 function App() {
   return (
@@ -12,7 +14,11 @@ function App() {
           <TopBar />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
             <NewArrivals />
-            <ForYou />
+            <div className="mt-8 grid grid-cols-[minmax(0,1fr)_220px] gap-6 px-6">
+              <ForYou />
+              <Trending />
+            </div>
+            <Collections />
           </div>
         </main>
       </div>
