@@ -1,3 +1,4 @@
+import ForYou from './components/ForYou.jsx'
 import NewArrivals from './components/NewArrivals.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
@@ -11,6 +12,7 @@ function App() {
           <TopBar />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
             <NewArrivals />
+            <ForYou />
           </div>
         </main>
       </div>
