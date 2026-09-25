@@ -1,6 +1,9 @@
-function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications }) {
+function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications, onMenu }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
+      <button type="button" onClick={onMenu} aria-label="Open menu" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-ink md:hidden">
+        <MenuIcon />
+      </button>
       <label className="flex h-10 w-full max-w-sm items-center gap-2 rounded-full bg-field px-4 text-muted">
         <SearchIcon />
         <input
@@ -53,6 +56,14 @@ function IconButton({ label, active, onClick, children }) {
     >
       {children}
     </button>
+  )
+}
+
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="size-5" fill="none" aria-hidden="true">
+      <path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   )
 }
 

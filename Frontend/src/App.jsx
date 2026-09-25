@@ -26,6 +26,15 @@ import { fulfillRequirement, loadRequirements } from './data/requirements.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 
+const adminSections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'fines', 'requirements']
+
+function guardSection(role, sectionId) {
+  if (sectionId === 'profile') return 'profile'
+  const adminPage = adminSections.includes(sectionId)
+  if (role === 'ADMIN') return adminPage ? sectionId : 'dashboard'
+  return adminPage ? 'discover' : sectionId
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [view, setView] = useState('grid')
@@ -38,6 +47,7 @@ function App() {
   const [books, setBooks] = useState(() => loadCatalog())
   const [requirements, setRequirements] = useState(() => loadRequirements())
   const [notesOpen, setNotesOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [notes, setNotes] = useState([
     { id: 'n1', title: 'Due soon', message: 'The Design of Everyday Things is due in 4 days.', read: false },
     { id: 'n2', title: 'Return recorded', message: 'Clean Code was returned.', read: false },
@@ -55,6 +65,14 @@ function App() {
   const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
+  const section = guardSection(session?.role, sectionId)
+
+  function chooseSection(id) {
+    setSectionId(id)
+    setQuery('')
+    setSelectedTitle(null)
+    setMenuOpen(false)
+  }
 
   function enter(result) {
     if (result.session) {
@@ -81,9 +99,13 @@ function App() {
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-canvas p-3 font-sans text-ink sm:p-5 md:p-6">
-      <div className="flex h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-window bg-white shadow-window sm:h-[calc(100svh-2.5rem)] md:h-[calc(100svh-3rem)]">
+      <div className="relative flex h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-window bg-white shadow-window sm:h-[calc(100svh-2.5rem)] md:h-[calc(100svh-3rem)]">
+        {menuOpen ? (
+          <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 z-20 bg-navy/40 md:hidden" />
+        ) : null}
         <Sidebar
-          activeId={sectionId}
+          open={menuOpen}
+          activeId={section}
           user={session}
           onAccount={() => setAuthMode('login')}
           activeLoan={activeLoan}
@@ -91,15 +113,13 @@ function App() {
             clearSession()
             setSession(null)
             setSectionId('discover')
+            setMenuOpen(false)
           }}
-          onSelect={(id) => {
-            setSectionId(id)
-            setQuery('')
-            setSelectedTitle(null)
-          }}
+          onSelect={chooseSection}
         />
         <main aria-label="Library window" className="relative flex min-w-0 flex-1 flex-col bg-white">
           <TopBar
+            onMenu={() => setMenuOpen(true)}
             query={query}
             onQueryChange={(value) => {
               setQuery(value)
@@ -107,15 +127,11 @@ function App() {
             }}
             view={view}
             onViewChange={setView}
-            onSettings={() => {
-              setSectionId('profile')
-              setSelectedTitle(null)
-              setQuery('')
-            }}
+            onSettings={() => chooseSection('profile')}
             onNotifications={() => setNotesOpen(true)}
           />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-            {sectionId === 'profile' ? (
+            {section === 'profile' ? (
               <ProfilePage
                 profile={profile}
                 onSave={(next) => {
@@ -126,29 +142,24 @@ function App() {
                   }
                 }}
               />
-            ) : session?.role === 'ADMIN' && sectionId === 'dashboard' ? (
+            ) : session?.role === 'ADMIN' && section === 'dashboard' ? (
               <AdminDashboard books={books} loans={loans} fines={fines} />
-            ) : session?.role === 'ADMIN' && sectionId === 'users' ? (
+            ) : session?.role === 'ADMIN' && section === 'users' ? (
               <AdminUsers />
-            ) : session?.role === 'ADMIN' && sectionId === 'catalog' ? (
+            ) : session?.role === 'ADMIN' && section === 'catalog' ? (
               <AdminCatalog books={books} onChange={(next) => setBooks(saveCatalog(next))} />
-            ) : session?.role === 'ADMIN' && sectionId === 'copies' ? (
+            ) : session?.role === 'ADMIN' && section === 'copies' ? (
               <AdminCopies books={books} loans={loans} onChange={(next) => setBooks(saveCatalog(next))} />
-            ) : session?.role === 'ADMIN' && sectionId === 'borrows' ? (
+            ) : session?.role === 'ADMIN' && section === 'borrows' ? (
               <AdminBorrows loans={loans} />
-            ) : session?.role === 'ADMIN' && sectionId === 'fines' ? (
+            ) : session?.role === 'ADMIN' && section === 'fines' ? (
               <AdminFines fines={fines} onWaive={(fineId) => setFines(waiveFine(fines, fineId))} />
-            ) : session?.role === 'ADMIN' && sectionId === 'requirements' ? (
+            ) : session?.role === 'ADMIN' && section === 'requirements' ? (
               <AdminRequirements
                 requirements={requirements}
                 onChange={setRequirements}
                 onFulfill={(requirementId) => setRequirements(fulfillRequirement(requirements, requirementId))}
               />
-            ) : session?.role === 'ADMIN' ? (
-              <section className="px-6" aria-label="Admin shell">
-                <h2 className="text-lg font-semibold">{sectionId[0].toUpperCase() + sectionId.slice(1)}</h2>
-                <p className="mt-1 text-sm text-muted">Signed in as {session.name}.</p>
-              </section>
             ) : selectedBook ? (
               <ResourceDetail
                 book={selectedBook}
@@ -159,9 +170,9 @@ function App() {
                   if (result.loans) setLoans(result.loans)
                 }}
               />
-            ) : sectionId === 'fines' ? (
+            ) : section === 'fines' ? (
               <FinesPage fines={fines} onPay={(fineId) => setFines(payFine(fines, fineId))} />
-            ) : sectionId === 'reading-now' ? (
+            ) : section === 'reading-now' ? (
               <LoansPage
                 loans={loans}
                 onOpen={setSelectedTitle}
@@ -169,12 +180,12 @@ function App() {
               />
             ) : searching ? (
               <SearchResults query={query} results={searchCatalog(query)} view={view} onOpen={setSelectedTitle} />
-            ) : sectionId !== 'discover' ? (
-              <CategoryPage title={sectionLabels[sectionId]} books={booksFor(sectionId)} view={view} onOpen={setSelectedTitle} />
+            ) : section !== 'discover' ? (
+              <CategoryPage title={sectionLabels[section]} books={booksFor(section)} view={view} onOpen={setSelectedTitle} />
             ) : (
               <>
                 <NewArrivals onOpen={setSelectedTitle} />
-                <div className="mt-8 grid grid-cols-[minmax(0,1fr)_220px] gap-6 px-6">
+                <div className="mt-8 grid grid-cols-1 gap-6 px-6 md:grid-cols-[minmax(0,1fr)_220px]">
                   <ForYou onOpen={setSelectedTitle} />
                   <Trending />
                 </div>

@@ -1,0 +1,17 @@
+{
+  "name": "Archivalia",
+  "short_name": "Archivalia",
+  "description": "Enterprise academic e-library",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e6ebf2",
+  "theme_color": "#1c2433",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

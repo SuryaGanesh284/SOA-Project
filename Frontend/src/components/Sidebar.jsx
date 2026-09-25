@@ -48,9 +48,9 @@ const adminSections = [
   },
 ]
 
-function Sidebar({ activeId, onSelect, onAccount, onSignOut, user, activeLoan }) {
+function Sidebar({ activeId, onSelect, onAccount, onSignOut, user, activeLoan, open }) {
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col bg-navy text-white">
+    <aside className={`${open ? 'flex' : 'hidden'} absolute inset-y-0 left-0 z-30 h-full w-60 shrink-0 flex-col bg-navy text-white md:static md:flex`}>
       <div className="flex items-center gap-3 px-5 pb-3 pt-4">
         <button type="button" onClick={user ? onSignOut : onAccount} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
