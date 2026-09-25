@@ -1,4 +1,4 @@
-export const catalog = [
+export let catalog = [
   {
     title: 'The Design of Everyday Things',
     author: 'Don Norman',
@@ -149,4 +149,60 @@ export function searchCatalog(query) {
   return catalog.filter((book) => {
     return book.title.toLowerCase().includes(term) || book.author.toLowerCase().includes(term)
   })
+}
+
+const CATALOG_KEY = 'archivalia-catalog'
+const formats = ['ebooks', 'papers', 'videos', 'audio', 'physical']
+
+export function loadCatalog() {
+  const saved = localStorage.getItem(CATALOG_KEY)
+  if (saved) catalog = JSON.parse(saved)
+  return catalog
+}
+
+export function saveCatalog(next) {
+  catalog = next
+  localStorage.setItem(CATALOG_KEY, JSON.stringify(next))
+  return catalog
+}
+
+export function upsertResource(books, draft) {
+  const title = draft.title.trim()
+  const author = draft.author.trim()
+  const year = Number(draft.year)
+  if (!title || !author || !year) return { error: 'Enter a title, author, and year.' }
+  const duplicate = books.some((book) => book.title === title && book.title !== draft.originalTitle)
+  if (duplicate) return { error: 'A resource with that title already exists.' }
+
+  if (draft.originalTitle) {
+    const next = books.map((book) => {
+      if (book.title !== draft.originalTitle) return book
+      const rest = book.groups.filter((group) => !formats.includes(group))
+      return { ...book, title, author, year, description: draft.description.trim(), groups: [draft.format, ...rest] }
+    })
+    return { books: next }
+  }
+
+  const code = `${draft.format === 'physical' ? 'PHY' : 'DIG'}-${String(Date.now()).slice(-3)}`
+  const next = [
+    ...books,
+    {
+      title,
+      author,
+      year,
+      rating: 4,
+      swatch: 'from-sky-400 to-blue-800',
+      groups: [draft.format],
+      description: draft.description.trim(),
+      copies: [{ code, status: 'AVAILABLE', location: draft.format === 'physical' ? 'Shelf A1' : 'Online' }],
+    },
+  ]
+  return { books: next }
+}
+
+export function setCopyStatus(books, code, status) {
+  return books.map((book) => ({
+    ...book,
+    copies: book.copies.map((copy) => (copy.code === code ? { ...copy, status } : copy)),
+  }))
 }

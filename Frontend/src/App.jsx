@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import AdminCatalog from './components/AdminCatalog.jsx'
+import AdminCopies from './components/AdminCopies.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import AdminUsers from './components/AdminUsers.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
@@ -15,7 +17,7 @@ import SearchResults from './components/SearchResults.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
-import { bookByTitle, booksFor, searchCatalog, sectionLabels } from './data/catalog.js'
+import { bookByTitle, booksFor, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
 import { loadFines, payFine } from './data/fines.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
@@ -29,6 +31,7 @@ function App() {
   const [session, setSession] = useState(() => loadSession())
   const [loans, setLoans] = useState(() => loadLoans())
   const [fines, setFines] = useState(() => loadFines())
+  const [books, setBooks] = useState(() => loadCatalog())
   const [notesOpen, setNotesOpen] = useState(false)
   const [notes, setNotes] = useState([
     { id: 'n1', title: 'Due soon', message: 'The Design of Everyday Things is due in 4 days.', read: false },
@@ -119,9 +122,13 @@ function App() {
                 }}
               />
             ) : session?.role === 'ADMIN' && sectionId === 'dashboard' ? (
-              <AdminDashboard loans={loans} fines={fines} />
+              <AdminDashboard books={books} loans={loans} fines={fines} />
             ) : session?.role === 'ADMIN' && sectionId === 'users' ? (
               <AdminUsers />
+            ) : session?.role === 'ADMIN' && sectionId === 'catalog' ? (
+              <AdminCatalog books={books} onChange={(next) => setBooks(saveCatalog(next))} />
+            ) : session?.role === 'ADMIN' && sectionId === 'copies' ? (
+              <AdminCopies books={books} loans={loans} onChange={(next) => setBooks(saveCatalog(next))} />
             ) : session?.role === 'ADMIN' ? (
               <section className="px-6" aria-label="Admin shell">
                 <h2 className="text-lg font-semibold">{sectionId[0].toUpperCase() + sectionId.slice(1)}</h2>

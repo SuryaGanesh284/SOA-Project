@@ -1,13 +1,12 @@
-import { catalog } from '../data/catalog.js'
 import { activeLoans } from '../data/loans.js'
 import { listUsers } from '../data/session.js'
 
-function AdminDashboard({ loans, fines }) {
-  const copies = catalog.reduce((sum, book) => sum + book.copies.length, 0)
+function AdminDashboard({ books, loans, fines }) {
+  const copies = books.reduce((sum, book) => sum + book.copies.length, 0)
   const pending = fines.filter((fine) => fine.status === 'PENDING')
   const outstanding = pending.reduce((sum, fine) => sum + fine.amount, 0)
   const stats = [
-    { label: 'Titles', value: catalog.length },
+    { label: 'Titles', value: books.length },
     { label: 'Copies', value: copies },
     { label: 'Active loans', value: activeLoans(loans).length },
     { label: 'Users', value: listUsers().length },
