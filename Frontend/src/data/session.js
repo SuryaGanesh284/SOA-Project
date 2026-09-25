@@ -17,7 +17,7 @@ export function loadSession() {
   return saved ? JSON.parse(saved) : null
 }
 
-function saveSession(session) {
+export function saveSession(session) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
 }

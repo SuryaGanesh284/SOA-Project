@@ -6,6 +6,8 @@ import FinesPage from './components/FinesPage.jsx'
 import ForYou from './components/ForYou.jsx'
 import LoansPage from './components/LoansPage.jsx'
 import NewArrivals from './components/NewArrivals.jsx'
+import NotificationDrawer from './components/NotificationDrawer.jsx'
+import ProfilePage from './components/ProfilePage.jsx'
 import ResourceDetail from './components/ResourceDetail.jsx'
 import SearchResults from './components/SearchResults.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -14,7 +16,7 @@ import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, searchCatalog, sectionLabels } from './data/catalog.js'
 import { loadFines, payFine } from './data/fines.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
-import { clearSession, loadSession, register, signIn } from './data/session.js'
+import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 
 function App() {
   const [query, setQuery] = useState('')
@@ -25,6 +27,21 @@ function App() {
   const [session, setSession] = useState(() => loadSession())
   const [loans, setLoans] = useState(() => loadLoans())
   const [fines, setFines] = useState(() => loadFines())
+  const [notesOpen, setNotesOpen] = useState(false)
+  const [notes, setNotes] = useState([
+    { id: 'n1', title: 'Due soon', message: 'The Design of Everyday Things is due in 4 days.', read: false },
+    { id: 'n2', title: 'Return recorded', message: 'Clean Code was returned.', read: false },
+    { id: 'n3', title: 'Payment', message: 'A fine payment is ready to confirm.', read: true },
+  ])
+  const [profile, setProfile] = useState(() => {
+    const current = loadSession()
+    return {
+      name: current?.name || 'Ben Bradle',
+      userId: current?.role === 'ADMIN' ? 'ADM-001' : 'USR-101',
+      email: current?.email || 'user@archivalia.test',
+      phone: '9876543210',
+    }
+  })
   const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
@@ -71,7 +88,7 @@ function App() {
             setSelectedTitle(null)
           }}
         />
-        <main aria-label="Library window" className="flex min-w-0 flex-1 flex-col bg-white">
+        <main aria-label="Library window" className="relative flex min-w-0 flex-1 flex-col bg-white">
           <TopBar
             query={query}
             onQueryChange={(value) => {
@@ -80,9 +97,26 @@ function App() {
             }}
             view={view}
             onViewChange={setView}
+            onSettings={() => {
+              setSectionId('profile')
+              setSelectedTitle(null)
+              setQuery('')
+            }}
+            onNotifications={() => setNotesOpen(true)}
           />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-            {session?.role === 'ADMIN' ? (
+            {sectionId === 'profile' ? (
+              <ProfilePage
+                profile={profile}
+                onSave={(next) => {
+                  setProfile(next)
+                  if (session) {
+                    const updated = { ...session, name: next.name, email: next.email }
+                    setSession(saveSession(updated))
+                  }
+                }}
+              />
+            ) : session?.role === 'ADMIN' ? (
               <section className="px-6" aria-label="Admin shell">
                 <h2 className="text-lg font-semibold">
                   {sectionId === 'dashboard' ? 'Dashboard' : sectionId[0].toUpperCase() + sectionId.slice(1)}
@@ -122,6 +156,13 @@ function App() {
               </>
             )}
           </div>
+          {notesOpen ? (
+            <NotificationDrawer
+              notes={notes}
+              onClose={() => setNotesOpen(false)}
+              onRead={(id) => setNotes((current) => current.map((note) => (note.id === id ? { ...note, read: true } : note)))}
+            />
+          ) : null}
         </main>
       </div>
     </div>

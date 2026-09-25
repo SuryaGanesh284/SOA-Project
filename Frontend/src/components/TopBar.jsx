@@ -1,4 +1,4 @@
-function TopBar({ query, onQueryChange, view, onViewChange }) {
+function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
       <label className="flex h-10 w-full max-w-sm items-center gap-2 rounded-full bg-field px-4 text-muted">
@@ -29,10 +29,10 @@ function TopBar({ query, onQueryChange, view, onViewChange }) {
           <ListIcon />
         </IconButton>
         <span className="mx-2 h-5 w-px bg-slate-200" />
-        <IconButton label="Settings">
+        <IconButton label="Settings" onClick={onSettings}>
           <GearIcon />
         </IconButton>
-        <IconButton label="Notifications">
+        <IconButton label="Notifications" onClick={onNotifications}>
           <BellIcon />
         </IconButton>
       </div>
