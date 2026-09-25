@@ -27,3 +27,9 @@ export function payFine(fines, fineId) {
   localStorage.setItem(FINES_KEY, JSON.stringify(next))
   return next
 }
+
+export function waiveFine(fines, fineId) {
+  const next = fines.map((fine) => (fine.id === fineId ? { ...fine, status: 'WAIVED' } : fine))
+  localStorage.setItem(FINES_KEY, JSON.stringify(next))
+  return next
+}

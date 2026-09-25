@@ -1,5 +1,8 @@
 import { useState } from 'react'
+import AdminBorrows from './components/AdminBorrows.jsx'
 import AdminCatalog from './components/AdminCatalog.jsx'
+import AdminFines from './components/AdminFines.jsx'
+import AdminRequirements from './components/AdminRequirements.jsx'
 import AdminCopies from './components/AdminCopies.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import AdminUsers from './components/AdminUsers.jsx'
@@ -18,7 +21,8 @@ import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
-import { loadFines, payFine } from './data/fines.js'
+import { loadFines, payFine, waiveFine } from './data/fines.js'
+import { fulfillRequirement, loadRequirements } from './data/requirements.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 
@@ -32,6 +36,7 @@ function App() {
   const [loans, setLoans] = useState(() => loadLoans())
   const [fines, setFines] = useState(() => loadFines())
   const [books, setBooks] = useState(() => loadCatalog())
+  const [requirements, setRequirements] = useState(() => loadRequirements())
   const [notesOpen, setNotesOpen] = useState(false)
   const [notes, setNotes] = useState([
     { id: 'n1', title: 'Due soon', message: 'The Design of Everyday Things is due in 4 days.', read: false },
@@ -129,6 +134,16 @@ function App() {
               <AdminCatalog books={books} onChange={(next) => setBooks(saveCatalog(next))} />
             ) : session?.role === 'ADMIN' && sectionId === 'copies' ? (
               <AdminCopies books={books} loans={loans} onChange={(next) => setBooks(saveCatalog(next))} />
+            ) : session?.role === 'ADMIN' && sectionId === 'borrows' ? (
+              <AdminBorrows loans={loans} />
+            ) : session?.role === 'ADMIN' && sectionId === 'fines' ? (
+              <AdminFines fines={fines} onWaive={(fineId) => setFines(waiveFine(fines, fineId))} />
+            ) : session?.role === 'ADMIN' && sectionId === 'requirements' ? (
+              <AdminRequirements
+                requirements={requirements}
+                onChange={setRequirements}
+                onFulfill={(requirementId) => setRequirements(fulfillRequirement(requirements, requirementId))}
+              />
             ) : session?.role === 'ADMIN' ? (
               <section className="px-6" aria-label="Admin shell">
                 <h2 className="text-lg font-semibold">{sectionId[0].toUpperCase() + sectionId.slice(1)}</h2>

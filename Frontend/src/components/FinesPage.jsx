@@ -23,7 +23,7 @@ function FinesPage({ fines, onPay }) {
                 Pay
               </button>
             ) : (
-              <span className="text-sm text-emerald-600">PAID</span>
+              <span className={`text-sm ${fine.status === 'PAID' ? 'text-emerald-600' : 'text-muted'}`}>{fine.status}</span>
             )}
           </li>
         ))}
