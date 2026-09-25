@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
+import FinesPage from './components/FinesPage.jsx'
 import ForYou from './components/ForYou.jsx'
 import LoansPage from './components/LoansPage.jsx'
 import NewArrivals from './components/NewArrivals.jsx'
@@ -11,6 +12,7 @@ import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, searchCatalog, sectionLabels } from './data/catalog.js'
+import { loadFines, payFine } from './data/fines.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, signIn } from './data/session.js'
 
@@ -22,6 +24,7 @@ function App() {
   const [authMode, setAuthMode] = useState(null)
   const [session, setSession] = useState(() => loadSession())
   const [loans, setLoans] = useState(() => loadLoans())
+  const [fines, setFines] = useState(() => loadFines())
   const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
   const selectedBook = bookByTitle(selectedTitle)
@@ -96,6 +99,8 @@ function App() {
                   if (result.loans) setLoans(result.loans)
                 }}
               />
+            ) : sectionId === 'fines' ? (
+              <FinesPage fines={fines} onPay={(fineId) => setFines(payFine(fines, fineId))} />
             ) : sectionId === 'reading-now' ? (
               <LoansPage
                 loans={loans}

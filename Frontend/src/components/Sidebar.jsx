@@ -17,6 +17,7 @@ const sections = [
       { id: 'due-soon', label: 'Due soon', icon: 'dot' },
       { id: 'reading-now', label: 'Reading now', icon: 'dot' },
       { id: 'saved', label: 'Saved', icon: 'dot' },
+      { id: 'fines', label: 'Fines', icon: 'dot' },
     ],
   },
   {
