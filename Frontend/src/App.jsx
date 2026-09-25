@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import AdminDashboard from './components/AdminDashboard.jsx'
+import AdminUsers from './components/AdminUsers.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
@@ -116,11 +118,13 @@ function App() {
                   }
                 }}
               />
+            ) : session?.role === 'ADMIN' && sectionId === 'dashboard' ? (
+              <AdminDashboard loans={loans} fines={fines} />
+            ) : session?.role === 'ADMIN' && sectionId === 'users' ? (
+              <AdminUsers />
             ) : session?.role === 'ADMIN' ? (
               <section className="px-6" aria-label="Admin shell">
-                <h2 className="text-lg font-semibold">
-                  {sectionId === 'dashboard' ? 'Dashboard' : sectionId[0].toUpperCase() + sectionId.slice(1)}
-                </h2>
+                <h2 className="text-lg font-semibold">{sectionId[0].toUpperCase() + sectionId.slice(1)}</h2>
                 <p className="mt-1 text-sm text-muted">Signed in as {session.name}.</p>
               </section>
             ) : selectedBook ? (

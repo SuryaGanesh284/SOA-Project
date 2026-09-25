@@ -12,6 +12,21 @@ function readAccounts() {
   return [...demoAccounts, ...extra]
 }
 
+export function listUsers() {
+  let nextUser = 102
+  return readAccounts().map((account) => ({
+    userId:
+      account.email === 'admin@archivalia.test'
+        ? 'ADM-001'
+        : account.email === 'user@archivalia.test'
+          ? 'USR-101'
+          : `USR-${nextUser++}`,
+    name: account.name,
+    email: account.email,
+    role: account.role,
+  }))
+}
+
 export function loadSession() {
   const saved = localStorage.getItem(SESSION_KEY)
   return saved ? JSON.parse(saved) : null
