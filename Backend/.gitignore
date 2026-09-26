@@ -1,0 +1,29 @@
+# Compiled class files
+target/
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven local binary
+.mvn/maven/
+
+# Virtual Machine Crash Logs
+hs_err_pid*
+
+# IDE specific files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
