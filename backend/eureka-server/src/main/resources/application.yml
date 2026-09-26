@@ -1,0 +1,30 @@
+# ==============================================================================
+# Eureka Server — Default Profile (local development)
+# ==============================================================================
+
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  client:
+    # This IS the registry — do not try to register with itself
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    # Disable self-preservation in dev (avoids stale entries)
+    enable-self-preservation: false
+    # Faster eviction of dead instances in dev
+    eviction-interval-timer-in-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

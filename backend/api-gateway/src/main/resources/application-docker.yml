@@ -1,0 +1,12 @@
+# ==============================================================================
+# API Gateway — Docker Profile
+# ==============================================================================
+# Overrides for running inside Docker Compose.
+# Activated via SPRING_PROFILES_ACTIVE=docker
+# ==============================================================================
+
+eureka:
+  client:
+    service-url:
+      # In Docker, Eureka is reachable via its container/service name
+      defaultZone: http://eureka-server:8761/eureka/

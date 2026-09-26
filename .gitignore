@@ -1,0 +1,61 @@
+# ========================
+# Secrets — NEVER commit
+# ========================
+.env
+*.env.local
+
+# ========================
+# Java / Maven
+# ========================
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+!**/src/**/resources/**/*.jar
+
+# ========================
+# Node.js / Frontend
+# ========================
+**/node_modules/
+**/dist/
+**/.cache/
+
+# ========================
+# IDE
+# ========================
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+.factorypath
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# ========================
+# Logs
+# ========================
+*.log
+**/logs/
+
+# ========================
+# Docker
+# ========================
+**/docker-compose.override.yml
+
+# ========================
+# Misc
+# ========================
+*.bak
+*.tmp
