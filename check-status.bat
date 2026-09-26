@@ -27,5 +27,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [4] Checking Backend Auth Service (Port 8081)...
+netstat -ano | findstr /R /C:":8081 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8081
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 echo ======================================================
 pause
