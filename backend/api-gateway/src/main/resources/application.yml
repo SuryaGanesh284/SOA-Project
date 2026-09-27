@@ -19,11 +19,12 @@ spring:
           lower-case-service-id: true
 
       # ── Route definitions ──────────────────────────────────────────────
-      # Routes for business services will be added in later phases.
-      # For Phase 1, the discovery locator handles dynamic routing.
-      # Explicit routes with path rewriting and filters will be defined
-      # per-service as they are implemented (Phase 2+).
-      # ───────────────────────────────────────────────────────────────────
+      routes:
+        # Auth/User Service (Phase 2)
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
 
 eureka:
   client:

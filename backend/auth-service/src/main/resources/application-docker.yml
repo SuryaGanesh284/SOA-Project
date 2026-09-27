@@ -1,0 +1,17 @@
+# ==============================================================================
+# Auth Service — Docker Profile
+# ==============================================================================
+# Overrides for running inside Docker Compose.
+# Activated via SPRING_PROFILES_ACTIVE=docker
+# ==============================================================================
+
+spring:
+  datasource:
+    # In Docker, MySQL is reachable via its container/service name
+    url: jdbc:mysql://mysql:3306/archivalia_auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+
+eureka:
+  client:
+    service-url:
+      # In Docker, Eureka is reachable via its container/service name
+      defaultZone: http://eureka-server:8761/eureka/
