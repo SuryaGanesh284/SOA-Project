@@ -32,6 +32,12 @@ spring:
           predicates:
             - Path=/api/v1/books/**
 
+        # Borrow Service (Phase 4)
+        - id: borrow-service
+          uri: lb://borrow-service
+          predicates:
+            - Path=/api/v1/borrows/**
+
 eureka:
   client:
     service-url:

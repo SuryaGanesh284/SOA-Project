@@ -120,8 +120,32 @@ services:
     networks:
       - archivalia-net
 
+  # ── Borrow Service ───────────────────────────────────────────────────────────
+  borrow-service:
+    build: ./backend/borrow-service
+    container_name: archivalia-borrow
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
   # ── Future services will be added here as phases are implemented ───────────
-  # borrow-service:   (Phase 4)
   # fine-service:     (Phase 5)
   # notification-service: (Phase 6)
   # recommendation-service: (Phase 7)

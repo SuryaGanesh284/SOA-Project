@@ -113,6 +113,28 @@ public class BookService {
         bookRepository.delete(book);
     }
 
+    @Transactional
+    public void reserveBook(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+        if (book.getAvailableCopies() <= 0) {
+            throw new InventoryException("No available copies for book id: " + id);
+        }
+        book.setAvailableCopies(book.getAvailableCopies() - 1);
+        bookRepository.save(book);
+    }
+
+    @Transactional
+    public void releaseBook(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+        if (book.getAvailableCopies() >= book.getTotalCopies()) {
+            throw new InventoryException("Cannot release: available copies would exceed total copies for book id: " + id);
+        }
+        book.setAvailableCopies(book.getAvailableCopies() + 1);
+        bookRepository.save(book);
+    }
+
     private void validateInventory(Integer totalCopies, Integer availableCopies) {
         if (totalCopies == null || totalCopies < 0) {
             throw new InventoryException("Total copies cannot be negative");
