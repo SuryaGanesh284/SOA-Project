@@ -38,6 +38,12 @@ spring:
           predicates:
             - Path=/api/v1/borrows/**
 
+        # Fine Service (Phase 5)
+        - id: fine-service
+          uri: lb://fine-service
+          predicates:
+            - Path=/api/v1/fines/**
+
 eureka:
   client:
     service-url:
