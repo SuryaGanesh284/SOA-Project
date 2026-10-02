@@ -236,4 +236,63 @@ public class FineService {
                 .createdAt(fine.getCreatedAt())
                 .build();
     }
+
+    @org.springframework.beans.factory.annotation.Value("${app.razorpay.webhook-secret}")
+    private String razorpayWebhookSecret;
+
+    @org.springframework.transaction.annotation.Transactional
+    public void processRazorpayWebhook(String payload, String signature) {
+        try {
+            boolean valid = com.razorpay.Utils.verifyWebhookSignature(payload, signature, razorpayWebhookSecret);
+            if (!valid) {
+                throw new IllegalArgumentException("Invalid webhook signature");
+            }
+            
+            org.json.JSONObject jsonPayload = new org.json.JSONObject(payload);
+            String event = jsonPayload.optString("event");
+            if (!"payment.captured".equals(event)) {
+                return;
+            }
+            
+            org.json.JSONObject paymentEntity = jsonPayload.getJSONObject("payload").getJSONObject("payment").getJSONObject("entity");
+            String razorpayPaymentId = paymentEntity.getString("id");
+            String razorpayOrderId = paymentEntity.optString("order_id", null);
+            
+            if (razorpayOrderId == null) {
+                return;
+            }
+            
+            com.archivalia.fine.entity.Payment payment = paymentRepository.findByRazorpayOrderId(razorpayOrderId)
+                    .orElse(null);
+                    
+            if (payment == null) {
+                return;
+            }
+            
+            com.archivalia.fine.entity.Payment existingPaymentByPaymentId = paymentRepository.findByRazorpayPaymentId(razorpayPaymentId)
+                    .orElse(null);
+                    
+            if (existingPaymentByPaymentId != null && !existingPaymentByPaymentId.getId().equals(payment.getId())) {
+                return;
+            }
+            
+            if (payment.getStatus() == com.archivalia.fine.entity.PaymentStatus.SUCCESS) {
+                return;
+            }
+            
+            payment.setStatus(com.archivalia.fine.entity.PaymentStatus.SUCCESS);
+            payment.setRazorpayPaymentId(razorpayPaymentId);
+            payment.setPaidAt(java.time.LocalDateTime.now());
+            paymentRepository.save(payment);
+            
+            Fine fine = fineRepository.findById(payment.getFineId()).orElse(null);
+            if (fine != null && fine.getStatus() != FineStatus.PAID) {
+                fine.setStatus(FineStatus.PAID);
+                fineRepository.save(fine);
+            }
+            
+        } catch (com.razorpay.RazorpayException e) {
+            throw new RuntimeException("Error verifying Razorpay webhook signature: " + e.getMessage(), e);
+        }
+    }
 }
