@@ -72,6 +72,33 @@ public class FineService {
                 .outstandingAmount(outstandingAmount)
                 .build();
     }
+    
+    @org.springframework.transaction.annotation.Transactional
+    public FineResponse waiveFine(Long fineId) {
+        Fine fine = fineRepository.findById(fineId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fine not found"));
+
+        fine.setStatus(FineStatus.WAIVED);
+        fine.setAmount(BigDecimal.ZERO);
+        fine = fineRepository.save(fine);
+        return mapToResponse(fine);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public FineResponse adjustFine(Long fineId, com.archivalia.fine.dto.FineAdjustRequest request) {
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Adjusted amount must be non-negative");
+        }
+
+        Fine fine = fineRepository.findById(fineId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fine not found"));
+
+        fine.setAmount(request.getAmount());
+
+        fine = fineRepository.save(fine);
+        return mapToResponse(fine);
+    }
+
 
     private FineResponse mapToResponse(Fine fine) {
         return FineResponse.builder()

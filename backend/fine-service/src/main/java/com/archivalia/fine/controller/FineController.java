@@ -66,4 +66,20 @@ public class FineController {
         DashboardResponse response = fineService.getDashboardMetrics();
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{fineId}/waive")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<FineResponse> waiveFine(@PathVariable Long fineId) {
+        FineResponse response = fineService.waiveFine(fineId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{fineId}/adjust")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<FineResponse> adjustFine(
+            @PathVariable Long fineId,
+            @RequestBody com.archivalia.fine.dto.FineAdjustRequest request) {
+        FineResponse response = fineService.adjustFine(fineId, request);
+        return ResponseEntity.ok(response);
+    }
 }
