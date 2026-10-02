@@ -18,9 +18,17 @@ import java.util.List;
 public class FineService {
 
     private final FineRepository fineRepository;
+    private final com.archivalia.fine.repository.PaymentRepository paymentRepository;
 
-    public FineService(FineRepository fineRepository) {
+    @org.springframework.beans.factory.annotation.Value("${app.razorpay.key-id}")
+    private String razorpayKeyId;
+
+    @org.springframework.beans.factory.annotation.Value("${app.razorpay.key-secret}")
+    private String razorpayKeySecret;
+
+    public FineService(FineRepository fineRepository, com.archivalia.fine.repository.PaymentRepository paymentRepository) {
         this.fineRepository = fineRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public FineResponse getFineById(Long id, String userId, boolean isAdmin) {
@@ -97,6 +105,57 @@ public class FineService {
 
         fine = fineRepository.save(fine);
         return mapToResponse(fine);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public com.archivalia.fine.dto.PaymentOrderResponse createPaymentOrder(Long fineId, String userId, boolean isAdmin) {
+        Fine fine = fineRepository.findById(fineId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fine not found"));
+
+        if (!isAdmin && !fine.getUserId().equals(userId)) {
+            throw new AccessDeniedException("You do not have permission to pay this fine");
+        }
+
+        if (fine.getStatus() == FineStatus.PAID || fine.getStatus() == FineStatus.WAIVED || fine.getStatus() == FineStatus.CANCELLED) {
+            throw new IllegalArgumentException("Fine is not in a payable state");
+        }
+
+        if (fine.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Fine amount must be greater than zero");
+        }
+
+        try {
+            com.razorpay.RazorpayClient razorpay = new com.razorpay.RazorpayClient(razorpayKeyId, razorpayKeySecret);
+
+            org.json.JSONObject orderRequest = new org.json.JSONObject();
+            // Convert to paise
+            int amountInPaise = fine.getAmount().multiply(new BigDecimal("100")).intValue();
+            orderRequest.put("amount", amountInPaise);
+            orderRequest.put("currency", "INR");
+            orderRequest.put("receipt", "fine_receipt_" + fineId);
+
+            com.razorpay.Order order = razorpay.orders.create(orderRequest);
+
+            com.archivalia.fine.entity.Payment payment = new com.archivalia.fine.entity.Payment();
+            payment.setFineId(fineId);
+            payment.setRazorpayOrderId(order.get("id"));
+            payment.setAmount(fine.getAmount());
+            payment.setStatus(com.archivalia.fine.entity.PaymentStatus.PENDING);
+
+            payment = paymentRepository.save(payment);
+
+            return com.archivalia.fine.dto.PaymentOrderResponse.builder()
+                    .fineId(fineId)
+                    .paymentId(payment.getId())
+                    .razorpayOrderId(payment.getRazorpayOrderId())
+                    .amount(payment.getAmount())
+                    .currency("INR")
+                    .razorpayKeyId(razorpayKeyId)
+                    .build();
+
+        } catch (com.razorpay.RazorpayException e) {
+            throw new RuntimeException("Error creating Razorpay order: " + e.getMessage(), e);
+        }
     }
 
 

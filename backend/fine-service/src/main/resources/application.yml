@@ -31,6 +31,9 @@ app:
     expiration-ms: 86400000
   fine:
     per-day-rate: ${FINE_PER_DAY_RATE:2.0}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
 
 management:
   endpoints:
