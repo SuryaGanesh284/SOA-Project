@@ -159,6 +159,72 @@ public class FineService {
     }
 
 
+    @org.springframework.transaction.annotation.Transactional
+    public com.archivalia.fine.dto.PaymentVerifyResponse verifyPayment(Long fineId, String userId, boolean isAdmin, com.archivalia.fine.dto.PaymentVerifyRequest request) {
+        Fine fine = fineRepository.findById(fineId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fine not found"));
+
+        if (!isAdmin && !fine.getUserId().equals(userId)) {
+            throw new AccessDeniedException("You do not have permission to verify payment for this fine");
+        }
+
+        com.archivalia.fine.entity.Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment order not found"));
+
+        if (!payment.getFineId().equals(fineId)) {
+            throw new IllegalArgumentException("Payment does not belong to the specified fine");
+        }
+
+        if (payment.getStatus() == com.archivalia.fine.entity.PaymentStatus.SUCCESS) {
+            if (request.getRazorpayPaymentId().equals(payment.getRazorpayPaymentId())) {
+                 return buildPaymentVerifyResponse(fineId, payment);
+            }
+            throw new IllegalArgumentException("Payment is already processed successfully");
+        }
+
+        if (fine.getStatus() == FineStatus.PAID || fine.getStatus() == FineStatus.WAIVED || fine.getStatus() == FineStatus.CANCELLED) {
+            throw new IllegalArgumentException("Fine is already processed");
+        }
+
+        try {
+            org.json.JSONObject options = new org.json.JSONObject();
+            options.put("razorpay_order_id", request.getRazorpayOrderId());
+            options.put("razorpay_payment_id", request.getRazorpayPaymentId());
+            options.put("razorpay_signature", request.getRazorpaySignature());
+
+            boolean valid = com.razorpay.Utils.verifyPaymentSignature(options, razorpayKeySecret);
+
+            if (!valid) {
+                throw new IllegalArgumentException("Invalid payment signature");
+            }
+
+            payment.setStatus(com.archivalia.fine.entity.PaymentStatus.SUCCESS);
+            payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
+            payment.setPaidAt(java.time.LocalDateTime.now());
+            payment = paymentRepository.save(payment);
+
+            fine.setStatus(FineStatus.PAID);
+            fineRepository.save(fine);
+
+            return buildPaymentVerifyResponse(fineId, payment);
+
+        } catch (com.razorpay.RazorpayException e) {
+            throw new RuntimeException("Error verifying Razorpay signature: " + e.getMessage(), e);
+        }
+    }
+
+    private com.archivalia.fine.dto.PaymentVerifyResponse buildPaymentVerifyResponse(Long fineId, com.archivalia.fine.entity.Payment payment) {
+        return com.archivalia.fine.dto.PaymentVerifyResponse.builder()
+                .fineId(fineId)
+                .paymentId(payment.getId())
+                .razorpayOrderId(payment.getRazorpayOrderId())
+                .razorpayPaymentId(payment.getRazorpayPaymentId())
+                .amount(payment.getAmount())
+                .status(payment.getStatus())
+                .paidAt(payment.getPaidAt())
+                .build();
+    }
+
     private FineResponse mapToResponse(Fine fine) {
         return FineResponse.builder()
                 .id(fine.getId())

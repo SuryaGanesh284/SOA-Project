@@ -95,4 +95,19 @@ public class FineController {
         com.archivalia.fine.dto.PaymentOrderResponse response = fineService.createPaymentOrder(fineId, userId, isAdmin);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{fineId}/payment/verify")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<com.archivalia.fine.dto.PaymentVerifyResponse> verifyPayment(
+            @PathVariable Long fineId,
+            @RequestBody com.archivalia.fine.dto.PaymentVerifyRequest request,
+            Authentication authentication) {
+        String userId = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
+
+        com.archivalia.fine.dto.PaymentVerifyResponse response = fineService.verifyPayment(fineId, userId, isAdmin, request);
+        return ResponseEntity.ok(response);
+    }
 }
