@@ -44,6 +44,12 @@ spring:
           predicates:
             - Path=/api/v1/fines/**
 
+        # Fine Service Webhook (Phase 5)
+        - id: fine-service-webhook
+          uri: lb://fine-service
+          predicates:
+            - Path=/api/v1/webhooks/razorpay/**
+
 eureka:
   client:
     service-url:
