@@ -1,6 +1,7 @@
 package com.archivalia.borrow.service;
 
 import com.archivalia.borrow.client.BookServiceClient;
+import com.archivalia.borrow.client.FineServiceClient;
 import com.archivalia.borrow.dto.BorrowRequest;
 import com.archivalia.borrow.dto.BorrowResponse;
 import com.archivalia.borrow.entity.BorrowStatus;
@@ -20,10 +21,12 @@ public class BorrowService {
 
     private final BorrowRepository borrowRepository;
     private final BookServiceClient bookServiceClient;
+    private final FineServiceClient fineServiceClient;
 
-    public BorrowService(BorrowRepository borrowRepository, BookServiceClient bookServiceClient) {
+    public BorrowService(BorrowRepository borrowRepository, BookServiceClient bookServiceClient, FineServiceClient fineServiceClient) {
         this.borrowRepository = borrowRepository;
         this.bookServiceClient = bookServiceClient;
+        this.fineServiceClient = fineServiceClient;
     }
 
     @Transactional
@@ -63,6 +66,15 @@ public class BorrowService {
         transaction.setStatus(BorrowStatus.RETURNED);
         transaction.setReturnedAt(LocalDateTime.now());
         BorrowTransaction saved = borrowRepository.save(transaction);
+        
+        // Asynchronously or inline trigger fine calculation, but do not fail the transaction
+        com.archivalia.borrow.client.dto.FineCalculationRequest fineRequest = new com.archivalia.borrow.client.dto.FineCalculationRequest(
+                saved.getId(),
+                saved.getUsername(),
+                saved.getDueAt(),
+                saved.getReturnedAt()
+        );
+        fineServiceClient.calculateFine(fineRequest);
 
         return mapToResponse(saved);
     }

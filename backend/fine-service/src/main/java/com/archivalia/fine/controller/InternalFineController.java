@@ -17,8 +17,8 @@ public class InternalFineController {
         this.fineCalculationService = fineCalculationService;
     }
 
-    @PostMapping("/calculate")
     @PreAuthorize("isAuthenticated()")
+    @PostMapping("/calculate")
     public ResponseEntity<FineCalculationResponse> calculateFine(@RequestBody FineCalculationRequest request) {
         FineCalculationResponse response = fineCalculationService.calculateFine(request);
         return ResponseEntity.ok(response);
