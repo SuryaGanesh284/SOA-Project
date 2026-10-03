@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: auth-service
+  profiles:
+    active: mysql
   datasource:
     url: jdbc:h2:mem:elibrary_auth;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
@@ -35,3 +37,20 @@ management:
     web:
       exposure:
         include: health,info
+
+---
+# MySQL Profile for Local MySQL Server & Workbench
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/elibrary_auth?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:Surya_285888}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
