@@ -35,5 +35,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [5] Checking Backend Book Service (Port 8082)...
+netstat -ano | findstr /R /C:":8082 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8082
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 echo ======================================================
 pause

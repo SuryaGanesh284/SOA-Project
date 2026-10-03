@@ -50,6 +50,20 @@
               "path": ["actuator", "health"]
             }
           }
+        },
+        {
+          "name": "Book Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["actuator", "health"]
+            }
+          }
         }
       ]
     },
@@ -165,6 +179,153 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "v1", "users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Book Catalog & Inventory",
+      "item": [
+        {
+          "name": "Get All Books via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"]
+            }
+          }
+        },
+        {
+          "name": "Search Books by Keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books?q=clean",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "clean"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter Books by Format",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books?format=physical",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "physical"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Book by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Physical Copies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/copies",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "copies"]
+            }
+          }
+        },
+        {
+          "name": "Update Copy Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"MAINTENANCE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/copies/PHY-015/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "copies", "PHY-015", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Add Inventory Requirement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud Native Patterns\",\n  \"note\": \"Recommended by Distributed Systems Faculty\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
             }
           }
         }
