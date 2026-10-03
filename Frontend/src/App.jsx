@@ -25,6 +25,7 @@ import { loadFines, payFine, waiveFine } from './data/fines.js'
 import { fulfillRequirement, loadRequirements } from './data/requirements.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
+import { authApi } from './services/api.js'
 
 const adminSections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'fines', 'requirements']
 
@@ -91,8 +92,8 @@ function App() {
         mode={authMode}
         onModeChange={setAuthMode}
         onClose={() => setAuthMode(null)}
-        onSignIn={(email, password) => enter(signIn(email, password))}
-        onRegister={(name, email, password) => enter(register(name, email, password))}
+        onSignIn={async (email, password) => enter(await signIn(email, password))}
+        onRegister={async (name, email, password) => enter(await register(name, email, password))}
       />
     )
   }
@@ -134,11 +135,12 @@ function App() {
             {section === 'profile' ? (
               <ProfilePage
                 profile={profile}
-                onSave={(next) => {
+                onSave={async (next) => {
                   setProfile(next)
                   if (session) {
                     const updated = { ...session, name: next.name, email: next.email }
                     setSession(saveSession(updated))
+                    await authApi.updateProfile(next.name, next.email, next.phone)
                   }
                 }}
               />

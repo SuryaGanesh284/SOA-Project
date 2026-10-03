@@ -7,10 +7,11 @@ function AuthScreen({ mode, onModeChange, onClose, onSignIn, onRegister }) {
   const [error, setError] = useState('')
   const isRegister = mode === 'register'
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    const result = isRegister ? onRegister(name, email, password) : onSignIn(email, password)
-    if (result.error) setError(result.error)
+    setError('')
+    const result = await (isRegister ? onRegister(name, email, password) : onSignIn(email, password))
+    if (result && result.error) setError(result.error)
   }
 
   return (

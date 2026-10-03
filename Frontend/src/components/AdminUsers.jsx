@@ -1,7 +1,20 @@
-import { listUsers } from '../data/session.js'
+import { useEffect, useState } from 'react'
+import { fetchLiveUsers, listUsers } from '../data/session.js'
 
 function AdminUsers() {
-  const users = listUsers()
+  const [users, setUsers] = useState(() => listUsers())
+
+  useEffect(() => {
+    let mounted = true
+    fetchLiveUsers().then((live) => {
+      if (mounted && Array.isArray(live)) {
+        setUsers(live)
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <section className="px-6" aria-label="Users">
