@@ -64,6 +64,20 @@
               "path": ["actuator", "health"]
             }
           }
+        },
+        {
+          "name": "Borrow Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["actuator", "health"]
+            }
+          }
         }
       ]
     },
@@ -326,6 +340,82 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Borrow & Circulation",
+      "item": [
+        {
+          "name": "Get All Loans (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows"]
+            }
+          }
+        },
+        {
+          "name": "Get My Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows/my?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows", "my"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrow Book (Checkout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Deep Work\",\n  \"userId\": \"USR-101\",\n  \"userName\": \"Ben Bradle\",\n  \"userEmail\": \"user@archivalia.test\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows"]
+            }
+          }
+        },
+        {
+          "name": "Return Book",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows/1/return",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows", "1", "return"]
             }
           }
         }

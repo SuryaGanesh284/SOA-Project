@@ -43,5 +43,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [6] Checking Backend Borrow Service (Port 8083)...
+netstat -ano | findstr /R /C:":8083 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8083
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 echo ======================================================
 pause
