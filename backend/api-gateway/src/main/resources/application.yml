@@ -1,0 +1,75 @@
+# ==============================================================================
+# API Gateway — Default Profile (local development)
+# ==============================================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # Enable automatic route creation from Eureka service IDs
+          enabled: true
+          # Use lowercase service IDs in route predicates
+          lower-case-service-id: true
+
+      # ── Route definitions ──────────────────────────────────────────────
+      routes:
+        # Auth/User Service (Phase 2)
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+
+        # Book Service (Phase 3)
+        - id: book-service
+          uri: lb://book-service
+          predicates:
+            - Path=/api/v1/books/**
+
+        # Borrow Service (Phase 4)
+        - id: borrow-service
+          uri: lb://borrow-service
+          predicates:
+            - Path=/api/v1/borrows/**
+
+        # Fine Service (Phase 5)
+        - id: fine-service
+          uri: lb://fine-service
+          predicates:
+            - Path=/api/v1/fines/**
+
+        # Fine Service Webhook (Phase 5)
+        - id: fine-service-webhook
+          uri: lb://fine-service
+          predicates:
+            - Path=/api/v1/webhooks/razorpay/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    # Fetch registry frequently in dev for faster discovery
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

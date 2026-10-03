@@ -1,0 +1,185 @@
+# ==============================================================================
+# Archivalia — Docker Compose
+# ==============================================================================
+# Phase 1: MySQL + Eureka Server + API Gateway
+#
+# Usage:
+#   cp .env.example .env       # First time only — fill in real values
+#   docker-compose up --build  # Build and start all services
+#   docker-compose down        # Stop all services
+#   docker-compose down -v     # Stop and remove data volumes
+# ==============================================================================
+
+services:
+  # ── MySQL Database ──────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: archivalia-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - archivalia-net
+
+  # ── Eureka Server (Service Registry) ────────────────────────────────────────
+  eureka-server:
+    build: ./backend/eureka-server
+    container_name: archivalia-eureka
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: archivalia-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # ── Auth/User Service ──────────────────────────────────────────────────────
+  auth-service:
+    build: ./backend/auth-service
+    container_name: archivalia-auth
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # ── Book Service ───────────────────────────────────────────────────────────
+  book-service:
+    build: ./backend/book-service
+    container_name: archivalia-book
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # ── Borrow Service ───────────────────────────────────────────────────────────
+  borrow-service:
+    build: ./backend/borrow-service
+    container_name: archivalia-borrow
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # ── Future services will be added here as phases are implemented ───────────
+  # ── Fine Service ───────────────────────────────────────────────────────────
+  fine-service:
+    build: ./backend/fine-service
+    container_name: archivalia-fine
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - archivalia-net
+
+  # notification-service: (Phase 6)
+  # recommendation-service: (Phase 7)
+  # discovery-service: (Phase 8)
+  # frontend:         (Phase 9)
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  archivalia-net:
+    driver: bridge

@@ -1,0 +1,10 @@
+# ==============================================================================
+# Eureka Server — Docker Profile
+# ==============================================================================
+# Overrides for running inside Docker Compose.
+# Activated via SPRING_PROFILES_ACTIVE=docker
+# ==============================================================================
+
+# No changes needed — Eureka Server does not connect to other services.
+# Other services find it via http://eureka-server:8761/eureka/
+# which is configured in THEIR docker profiles, not here.
