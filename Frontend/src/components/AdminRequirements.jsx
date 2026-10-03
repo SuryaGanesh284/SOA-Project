@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addRequirement } from '../data/requirements.js'
+import { addRequirementAsync } from '../data/requirements.js'
 
 function AdminRequirements({ requirements, onChange, onFulfill }) {
   const [draft, setDraft] = useState({ title: '', note: '' })
@@ -29,9 +29,9 @@ function AdminRequirements({ requirements, onChange, onFulfill }) {
 
       <form
         className="mt-6 max-w-md space-y-4"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
-          const result = addRequirement(requirements, draft)
+          const result = await addRequirementAsync(requirements, draft)
           if (result.error) {
             setMessage(result.error)
             return

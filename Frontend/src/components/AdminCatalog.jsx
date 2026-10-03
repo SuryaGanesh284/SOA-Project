@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatOf, upsertResource } from '../data/catalog.js'
+import { formatOf, upsertResourceAsync } from '../data/catalog.js'
 
 const formats = [
   { id: 'ebooks', label: 'E-book' },
@@ -48,9 +48,9 @@ function AdminCatalog({ books, onChange }) {
 
       <form
         className="mt-6 max-w-md space-y-4"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
-          const result = upsertResource(books, draft)
+          const result = await upsertResourceAsync(books, draft)
           if (result.error) {
             setMessage(result.error)
             return

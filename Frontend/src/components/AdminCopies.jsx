@@ -1,5 +1,5 @@
 import { copyStatus } from '../data/loans.js'
-import { setCopyStatus } from '../data/catalog.js'
+import { setCopyStatusAsync } from '../data/catalog.js'
 
 const statuses = ['AVAILABLE', 'BORROWED', 'MAINTENANCE']
 
@@ -25,7 +25,10 @@ function AdminCopies({ books, loans, onChange }) {
             <select
               aria-label={`Status for ${copy.code}`}
               value={copy.status}
-              onChange={(event) => onChange(setCopyStatus(books, copy.code, event.target.value))}
+              onChange={async (event) => {
+                const next = await setCopyStatusAsync(books, copy.code, event.target.value)
+                onChange(next)
+              }}
               className="h-10 rounded-xl bg-field px-3 text-sm outline-none"
             >
               {statuses.map((status) => (

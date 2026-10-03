@@ -81,3 +81,69 @@ export const authApi = {
     })
   },
 }
+
+export const catalogApi = {
+  getBooks: async (query, format) => {
+    const params = new URLSearchParams()
+    if (query) params.append('q', query)
+    if (format) params.append('format', format)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+    return apiRequest(`/books${qs}`, { method: 'GET' })
+  },
+
+  getBookById: async (id) => {
+    return apiRequest(`/books/${id}`, { method: 'GET' })
+  },
+
+  getBookByTitle: async (title) => {
+    return apiRequest(`/books/by-title/${encodeURIComponent(title)}`, { method: 'GET' })
+  },
+
+  upsertBook: async (draft) => {
+    const payload = {
+      originalTitle: draft.originalTitle || null,
+      title: draft.title ? draft.title.trim() : '',
+      author: draft.author ? draft.author.trim() : '',
+      year: Number(draft.year),
+      format: draft.format || 'ebooks',
+      description: draft.description ? draft.description.trim() : '',
+    }
+    return apiRequest('/books', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+
+  getCopies: async () => {
+    return apiRequest('/copies', { method: 'GET' })
+  },
+
+  updateCopyStatus: async (code, status) => {
+    return apiRequest(`/copies/${code}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    })
+  },
+}
+
+export const requirementsApi = {
+  getRequirements: async () => {
+    return apiRequest('/admin/inventory/requirements', { method: 'GET' })
+  },
+
+  addRequirement: async (draft) => {
+    return apiRequest('/admin/inventory/requirements', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: draft.title ? draft.title.trim() : '',
+        note: draft.note ? draft.note.trim() : '',
+      }),
+    })
+  },
+
+  fulfillRequirement: async (id) => {
+    return apiRequest(`/admin/inventory/requirements/${id}/fulfill`, {
+      method: 'PUT',
+    })
+  },
+}

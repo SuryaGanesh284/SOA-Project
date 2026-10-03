@@ -1,3 +1,5 @@
+import { catalogApi } from '../services/api.js'
+
 export let catalog = [
   {
     title: 'The Design of Everyday Things',
@@ -139,14 +141,14 @@ export const sectionLabels = {
   classics: 'Classic fiction',
 }
 
-export function booksFor(sectionId) {
-  return catalog.filter((book) => book.groups.includes(sectionId))
+export function booksFor(sectionId, list = catalog) {
+  return list.filter((book) => book.groups && book.groups.includes(sectionId))
 }
 
-export function searchCatalog(query) {
+export function searchCatalog(query, list = catalog) {
   const term = query.trim().toLowerCase()
   if (!term) return []
-  return catalog.filter((book) => {
+  return list.filter((book) => {
     return book.title.toLowerCase().includes(term) || book.author.toLowerCase().includes(term)
   })
 }
@@ -164,6 +166,18 @@ export function saveCatalog(next) {
   catalog = next
   localStorage.setItem(CATALOG_KEY, JSON.stringify(next))
   return catalog
+}
+
+export async function fetchCatalogFromBackend() {
+  try {
+    const res = await catalogApi.getBooks()
+    if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      return saveCatalog(res.data)
+    }
+  } catch {
+    // Fallback to local storage
+  }
+  return loadCatalog()
 }
 
 export function upsertResource(books, draft) {
@@ -200,9 +214,44 @@ export function upsertResource(books, draft) {
   return { books: next }
 }
 
+export async function upsertResourceAsync(books, draft) {
+  const localRes = upsertResource(books, draft)
+  if (localRes.error) return localRes
+
+  try {
+    const apiRes = await catalogApi.upsertBook(draft)
+    if (!apiRes.error && apiRes.data) {
+      const refreshed = await catalogApi.getBooks()
+      if (refreshed.data && Array.isArray(refreshed.data)) {
+        return { books: saveCatalog(refreshed.data) }
+      }
+    }
+  } catch {
+    // Fallback to local
+  }
+  saveCatalog(localRes.books)
+  return localRes
+}
+
 export function setCopyStatus(books, code, status) {
   return books.map((book) => ({
     ...book,
     copies: book.copies.map((copy) => (copy.code === code ? { ...copy, status } : copy)),
   }))
+}
+
+export async function setCopyStatusAsync(books, code, status) {
+  const localUpdated = setCopyStatus(books, code, status)
+  saveCatalog(localUpdated)
+
+  try {
+    await catalogApi.updateCopyStatus(code, status)
+    const refreshed = await catalogApi.getBooks()
+    if (refreshed.data && Array.isArray(refreshed.data)) {
+      return saveCatalog(refreshed.data)
+    }
+  } catch {
+    // Fallback to local
+  }
+  return localUpdated
 }

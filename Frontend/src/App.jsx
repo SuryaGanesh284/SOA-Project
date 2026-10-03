@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AdminBorrows from './components/AdminBorrows.jsx'
 import AdminCatalog from './components/AdminCatalog.jsx'
 import AdminFines from './components/AdminFines.jsx'
@@ -20,9 +20,9 @@ import SearchResults from './components/SearchResults.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
-import { bookByTitle, booksFor, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
+import { bookByTitle, booksFor, fetchCatalogFromBackend, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
 import { loadFines, payFine, waiveFine } from './data/fines.js'
-import { fulfillRequirement, loadRequirements } from './data/requirements.js'
+import { fetchRequirementsFromBackend, fulfillRequirementAsync, loadRequirements } from './data/requirements.js'
 import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 import { authApi } from './services/api.js'
@@ -63,9 +63,28 @@ function App() {
       phone: '9876543210',
     }
   })
+
+  useEffect(() => {
+    let ignore = false
+    async function initData() {
+      const liveBooks = await fetchCatalogFromBackend()
+      if (!ignore && liveBooks && liveBooks.length > 0) {
+        setBooks(liveBooks)
+      }
+      const liveReqs = await fetchRequirementsFromBackend()
+      if (!ignore && liveReqs && liveReqs.length > 0) {
+        setRequirements(liveReqs)
+      }
+    }
+    initData()
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
-  const selectedBook = bookByTitle(selectedTitle)
+  const selectedBook = books.find((b) => b.title === selectedTitle) || bookByTitle(selectedTitle)
   const section = guardSection(session?.role, sectionId)
 
   function chooseSection(id) {
@@ -160,7 +179,7 @@ function App() {
               <AdminRequirements
                 requirements={requirements}
                 onChange={setRequirements}
-                onFulfill={(requirementId) => setRequirements(fulfillRequirement(requirements, requirementId))}
+                onFulfill={async (requirementId) => setRequirements(await fulfillRequirementAsync(requirements, requirementId))}
               />
             ) : selectedBook ? (
               <ResourceDetail
@@ -181,9 +200,9 @@ function App() {
                 onReturn={(loanId) => setLoans(returnLoan(loans, loanId))}
               />
             ) : searching ? (
-              <SearchResults query={query} results={searchCatalog(query)} view={view} onOpen={setSelectedTitle} />
+              <SearchResults query={query} results={searchCatalog(query, books)} view={view} onOpen={setSelectedTitle} />
             ) : section !== 'discover' ? (
-              <CategoryPage title={sectionLabels[section]} books={booksFor(section)} view={view} onOpen={setSelectedTitle} />
+              <CategoryPage title={sectionLabels[section]} books={booksFor(section, books)} view={view} onOpen={setSelectedTitle} />
             ) : (
               <>
                 <NewArrivals onOpen={setSelectedTitle} />
