@@ -19,6 +19,7 @@
         <module>auth-service</module>
         <module>book-service</module>
         <module>borrow-service</module>
+        <module>fine-service</module>
     </modules>
 
     <properties>

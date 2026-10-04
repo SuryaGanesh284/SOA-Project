@@ -51,5 +51,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [7] Checking Backend Fine Service (Port 8084)...
+netstat -ano | findstr /R /C:":8084 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8084
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 echo ======================================================
 pause
