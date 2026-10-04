@@ -23,7 +23,7 @@ import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, fetchCatalogFromBackend, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
 import { loadFines, payFine, waiveFine } from './data/fines.js'
 import { fetchRequirementsFromBackend, fulfillRequirementAsync, loadRequirements } from './data/requirements.js'
-import { borrowTitle, loadLoans, returnLoan } from './data/loans.js'
+import { borrowTitleAsync, fetchLoansFromBackend, loadLoans, returnLoanAsync } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 import { authApi } from './services/api.js'
 
@@ -75,12 +75,16 @@ function App() {
       if (!ignore && liveReqs && liveReqs.length > 0) {
         setRequirements(liveReqs)
       }
+      const liveLoans = await fetchLoansFromBackend(session)
+      if (!ignore && liveLoans && liveLoans.length > 0) {
+        setLoans(liveLoans)
+      }
     }
     initData()
     return () => {
       ignore = true
     }
-  }, [])
+  }, [session])
 
   const activeLoan = loans.find((loan) => !loan.returnedAt)
   const searching = query.trim().length > 0
@@ -186,9 +190,11 @@ function App() {
                 book={selectedBook}
                 loans={loans}
                 onBack={() => setSelectedTitle(null)}
-                onBorrow={() => {
-                  const result = borrowTitle(loans, selectedBook.title)
+                onBorrow={async () => {
+                  const result = await borrowTitleAsync(loans, selectedBook.title, session || profile)
                   if (result.loans) setLoans(result.loans)
+                  const refreshed = await fetchCatalogFromBackend()
+                  if (refreshed && refreshed.length > 0) setBooks(refreshed)
                 }}
               />
             ) : section === 'fines' ? (
@@ -197,7 +203,12 @@ function App() {
               <LoansPage
                 loans={loans}
                 onOpen={setSelectedTitle}
-                onReturn={(loanId) => setLoans(returnLoan(loans, loanId))}
+                onReturn={async (loanId) => {
+                  const nextLoans = await returnLoanAsync(loans, loanId, session || profile)
+                  setLoans(nextLoans)
+                  const refreshed = await fetchCatalogFromBackend()
+                  if (refreshed && refreshed.length > 0) setBooks(refreshed)
+                }}
               />
             ) : searching ? (
               <SearchResults query={query} results={searchCatalog(query, books)} view={view} onOpen={setSelectedTitle} />

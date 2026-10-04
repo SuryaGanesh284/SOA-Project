@@ -147,3 +147,33 @@ export const requirementsApi = {
     })
   },
 }
+
+export const borrowApi = {
+  getAllBorrows: async () => {
+    return apiRequest('/borrows', { method: 'GET' })
+  },
+
+  getMyBorrows: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/borrows/my${qs}`, { method: 'GET' })
+  },
+
+  borrowBook: async (title, copyCode, user = {}) => {
+    return apiRequest('/borrows', {
+      method: 'POST',
+      body: JSON.stringify({
+        title,
+        copyCode: copyCode || null,
+        userId: user.userId || 'USR-101',
+        userName: user.name || 'Ben Bradle',
+        userEmail: user.email || 'user@archivalia.test',
+      }),
+    })
+  },
+
+  returnBook: async (loanId) => {
+    return apiRequest(`/borrows/${loanId}/return`, {
+      method: 'POST',
+    })
+  },
+}
