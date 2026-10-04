@@ -177,3 +177,61 @@ export const borrowApi = {
     })
   },
 }
+
+export const fineApi = {
+  createFine: async (fineData) => {
+    return apiRequest('/fines', {
+      method: 'POST',
+      body: JSON.stringify({
+        loanId: fineData.loanId || null,
+        userId: fineData.userId || 'USR-101',
+        userName: fineData.userName || 'Ben Bradle',
+        userEmail: fineData.userEmail || 'user@archivalia.test',
+        title: fineData.title,
+        amount: Number(fineData.amount),
+        reason: fineData.reason || 'Overdue return',
+      }),
+    })
+  },
+
+  getAllFines: async () => {
+    return apiRequest('/fines', { method: 'GET' })
+  },
+
+  getMyFines: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/fines/my${qs}`, { method: 'GET' })
+  },
+
+  payFine: async (fineId, paymentData = {}) => {
+    return apiRequest(`/fines/${fineId}/pay`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reference: paymentData.reference || `pay_rzp_${Date.now()}`,
+        method: paymentData.method || 'RAZORPAY_SANDBOX',
+      }),
+    })
+  },
+
+  waiveFine: async (fineId, reason = 'Administrative waiver') => {
+    return apiRequest(`/fines/${fineId}/waive`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    })
+  },
+
+  createPaymentOrder: async (fineId) => {
+    return apiRequest('/payments/create-order', {
+      method: 'POST',
+      body: JSON.stringify({ fineId }),
+    })
+  },
+
+  verifyPayment: async (orderId, paymentId, fineId) => {
+    return apiRequest('/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify({ orderId, paymentId, fineId }),
+    })
+  },
+}
+

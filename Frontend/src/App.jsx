@@ -21,19 +21,20 @@ import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
 import Trending from './components/Trending.jsx'
 import { bookByTitle, booksFor, fetchCatalogFromBackend, loadCatalog, saveCatalog, searchCatalog, sectionLabels } from './data/catalog.js'
-import { loadFines, payFine, waiveFine } from './data/fines.js'
+import { createFineAsync, fetchFinesFromBackend, loadFines, payFineAsync, waiveFineAsync } from './data/fines.js'
 import { fetchRequirementsFromBackend, fulfillRequirementAsync, loadRequirements } from './data/requirements.js'
 import { borrowTitleAsync, fetchLoansFromBackend, loadLoans, returnLoanAsync } from './data/loans.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 import { authApi } from './services/api.js'
 
-const adminSections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'fines', 'requirements']
+const adminOnlySections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'requirements']
+const adminAllowedSections = [...adminOnlySections, 'fines', 'profile']
 
 function guardSection(role, sectionId) {
-  if (sectionId === 'profile') return 'profile'
-  const adminPage = adminSections.includes(sectionId)
-  if (role === 'ADMIN') return adminPage ? sectionId : 'dashboard'
-  return adminPage ? 'discover' : sectionId
+  if (role === 'ADMIN') {
+    return adminAllowedSections.includes(sectionId) ? sectionId : 'dashboard'
+  }
+  return adminOnlySections.includes(sectionId) ? 'discover' : sectionId
 }
 
 function App() {
@@ -78,6 +79,10 @@ function App() {
       const liveLoans = await fetchLoansFromBackend(session)
       if (!ignore && liveLoans && liveLoans.length > 0) {
         setLoans(liveLoans)
+      }
+      const liveFines = await fetchFinesFromBackend(session)
+      if (!ignore && liveFines && liveFines.length > 0) {
+        setFines(liveFines)
       }
     }
     initData()
@@ -178,7 +183,7 @@ function App() {
             ) : session?.role === 'ADMIN' && section === 'borrows' ? (
               <AdminBorrows loans={loans} />
             ) : session?.role === 'ADMIN' && section === 'fines' ? (
-              <AdminFines fines={fines} onWaive={(fineId) => setFines(waiveFine(fines, fineId))} />
+              <AdminFines fines={fines} onWaive={async (fineId) => setFines(await waiveFineAsync(fines, fineId, session || profile))} />
             ) : session?.role === 'ADMIN' && section === 'requirements' ? (
               <AdminRequirements
                 requirements={requirements}
@@ -195,10 +200,16 @@ function App() {
                   if (result.loans) setLoans(result.loans)
                   const refreshed = await fetchCatalogFromBackend()
                   if (refreshed && refreshed.length > 0) setBooks(refreshed)
+                  const refreshedFines = await fetchFinesFromBackend(session)
+                  if (refreshedFines && refreshedFines.length > 0) setFines(refreshedFines)
                 }}
               />
             ) : section === 'fines' ? (
-              <FinesPage fines={fines} onPay={(fineId) => setFines(payFine(fines, fineId))} />
+              <FinesPage
+                fines={fines}
+                onPay={async (fineId, paymentData) => setFines(await payFineAsync(fines, fineId, session || profile, paymentData))}
+                onCreateDemo={async () => setFines(await createFineAsync({ title: 'Refactoring (Martin Fowler)', amount: 35, reason: 'Returned 2 days late' }, session || profile))}
+              />
             ) : section === 'reading-now' ? (
               <LoansPage
                 loans={loans}
@@ -208,6 +219,8 @@ function App() {
                   setLoans(nextLoans)
                   const refreshed = await fetchCatalogFromBackend()
                   if (refreshed && refreshed.length > 0) setBooks(refreshed)
+                  const refreshedFines = await fetchFinesFromBackend(session)
+                  if (refreshedFines && refreshedFines.length > 0) setFines(refreshedFines)
                 }}
               />
             ) : searching ? (
