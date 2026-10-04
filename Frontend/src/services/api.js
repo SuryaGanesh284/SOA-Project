@@ -235,3 +235,10 @@ export const fineApi = {
   },
 }
 
+export const dashboardApi = {
+  getDashboardKpis: async () => {
+    return apiRequest('/admin/dashboard', { method: 'GET' })
+  },
+}
+
+

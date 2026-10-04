@@ -588,6 +588,77 @@
           }
         }
       ]
+    },
+    {
+      "name": "7. Admin Dashboard & Acquisitions",
+      "item": [
+        {
+          "name": "Get Admin Dashboard KPIs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/dashboard",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Acquisition Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Create Acquisition Requirement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud Native Patterns\",\n  \"note\": \"Required for upcoming distributed systems lab\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Fulfill Acquisition Requirement",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements/1/fulfill",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements", "1", "fulfill"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
+

@@ -18,6 +18,9 @@ public class Requirement {
     @Column(nullable = false)
     private String status = "OPEN"; // OPEN, FULFILLED
 
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
+
     public Requirement() {
     }
 
@@ -25,6 +28,7 @@ public class Requirement {
         this.title = title;
         this.note = note;
         this.status = "OPEN";
+        this.createdAt = java.time.LocalDateTime.now();
     }
 
     public Long getId() {
@@ -57,5 +61,13 @@ public class Requirement {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

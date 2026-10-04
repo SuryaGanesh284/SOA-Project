@@ -173,7 +173,7 @@ function App() {
                 }}
               />
             ) : session?.role === 'ADMIN' && section === 'dashboard' ? (
-              <AdminDashboard books={books} loans={loans} fines={fines} />
+              <AdminDashboard books={books} loans={loans} fines={fines} requirements={requirements} onSelectSection={chooseSection} />
             ) : session?.role === 'ADMIN' && section === 'users' ? (
               <AdminUsers />
             ) : session?.role === 'ADMIN' && section === 'catalog' ? (
