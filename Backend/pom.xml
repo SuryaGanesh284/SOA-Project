@@ -20,6 +20,8 @@
         <module>book-service</module>
         <module>borrow-service</module>
         <module>fine-service</module>
+        <module>notification-service</module>
+        <module>recommendation-service</module>
     </modules>
 
     <properties>

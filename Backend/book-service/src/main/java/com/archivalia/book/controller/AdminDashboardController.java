@@ -35,7 +35,10 @@ public class AdminDashboardController {
         this.bookRepository = bookRepository;
         this.bookCopyRepository = bookCopyRepository;
         this.requirementRepository = requirementRepository;
-        this.restClient = RestClient.builder().build();
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(1500);
+        factory.setReadTimeout(1500);
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     @GetMapping
@@ -56,7 +59,7 @@ public class AdminDashboardController {
         long activeLoans = borrowedCopies;
         try {
             List<?> borrows = restClient.get()
-                    .uri("http://localhost:8080/api/v1/borrows")
+                    .uri("http://localhost:8083/api/v1/borrows")
                     .retrieve()
                     .body(List.class);
             if (borrows != null) {
@@ -92,7 +95,7 @@ public class AdminDashboardController {
         int totalCollectedAmount = 0;
         try {
             List<?> fines = restClient.get()
-                    .uri("http://localhost:8080/api/v1/fines")
+                    .uri("http://localhost:8084/api/v1/fines")
                     .retrieve()
                     .body(List.class);
             if (fines != null) {
@@ -115,6 +118,36 @@ public class AdminDashboardController {
         } catch (Exception e) {
             log.warn("Could not query fine-service: {}", e.getMessage());
             servicesStatus.put("fine-service", "DEGRADED");
+        }
+
+        try {
+            Map<?, ?> health = restClient.get()
+                    .uri("http://localhost:8085/actuator/health")
+                    .retrieve()
+                    .body(Map.class);
+            if (health != null && "UP".equals(health.get("status"))) {
+                servicesStatus.put("notification-service", "UP");
+            } else {
+                servicesStatus.put("notification-service", "DEGRADED");
+            }
+        } catch (Exception e) {
+            log.warn("Could not query notification-service: {}", e.getMessage());
+            servicesStatus.put("notification-service", "DEGRADED");
+        }
+
+        try {
+            Map<?, ?> health = restClient.get()
+                    .uri("http://localhost:8086/actuator/health")
+                    .retrieve()
+                    .body(Map.class);
+            if (health != null && "UP".equals(health.get("status"))) {
+                servicesStatus.put("recommendation-service", "UP");
+            } else {
+                servicesStatus.put("recommendation-service", "DEGRADED");
+            }
+        } catch (Exception e) {
+            log.warn("Could not query recommendation-service: {}", e.getMessage());
+            servicesStatus.put("recommendation-service", "DEGRADED");
         }
 
         AdminDashboardDto dto = new AdminDashboardDto(

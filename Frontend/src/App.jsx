@@ -24,6 +24,7 @@ import { bookByTitle, booksFor, fetchCatalogFromBackend, loadCatalog, saveCatalo
 import { createFineAsync, fetchFinesFromBackend, loadFines, payFineAsync, waiveFineAsync } from './data/fines.js'
 import { fetchRequirementsFromBackend, fulfillRequirementAsync, loadRequirements } from './data/requirements.js'
 import { borrowTitleAsync, fetchLoansFromBackend, loadLoans, returnLoanAsync } from './data/loans.js'
+import { fetchNotificationsFromBackend, loadNotifications, markAllNotificationsReadAsync, markNotificationReadAsync } from './data/notifications.js'
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 import { authApi } from './services/api.js'
 
@@ -50,11 +51,7 @@ function App() {
   const [requirements, setRequirements] = useState(() => loadRequirements())
   const [notesOpen, setNotesOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [notes, setNotes] = useState([
-    { id: 'n1', title: 'Due soon', message: 'The Design of Everyday Things is due in 4 days.', read: false },
-    { id: 'n2', title: 'Return recorded', message: 'Clean Code was returned.', read: false },
-    { id: 'n3', title: 'Payment', message: 'A fine payment is ready to confirm.', read: true },
-  ])
+  const [notes, setNotes] = useState(() => loadNotifications())
   const [profile, setProfile] = useState(() => {
     const current = loadSession()
     return {
@@ -83,6 +80,10 @@ function App() {
       const liveFines = await fetchFinesFromBackend(session)
       if (!ignore && liveFines && liveFines.length > 0) {
         setFines(liveFines)
+      }
+      const liveNotes = await fetchNotificationsFromBackend(session)
+      if (!ignore && liveNotes && liveNotes.length > 0) {
+        setNotes(liveNotes)
       }
     }
     initData()
@@ -158,6 +159,7 @@ function App() {
             onViewChange={setView}
             onSettings={() => chooseSection('profile')}
             onNotifications={() => setNotesOpen(true)}
+            unreadNotes={notes.filter((n) => !n.read).length}
           />
           <div className="min-h-0 flex-1 overflow-y-auto pb-6">
             {section === 'profile' ? (
@@ -231,7 +233,7 @@ function App() {
               <>
                 <NewArrivals onOpen={setSelectedTitle} />
                 <div className="mt-8 grid grid-cols-1 gap-6 px-6 md:grid-cols-[minmax(0,1fr)_220px]">
-                  <ForYou onOpen={setSelectedTitle} />
+                  <ForYou onOpen={setSelectedTitle} user={session || profile} />
                   <Trending />
                 </div>
                 <Collections />
@@ -242,7 +244,8 @@ function App() {
             <NotificationDrawer
               notes={notes}
               onClose={() => setNotesOpen(false)}
-              onRead={(id) => setNotes((current) => current.map((note) => (note.id === id ? { ...note, read: true } : note)))}
+              onRead={async (id) => setNotes(await markNotificationReadAsync(notes, id))}
+              onMarkAll={async () => setNotes(await markAllNotificationsReadAsync(notes, session || profile))}
             />
           ) : null}
         </main>

@@ -241,4 +241,65 @@ export const dashboardApi = {
   },
 }
 
+export const notificationApi = {
+  getMyNotifications: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/notifications/me${qs}`, { method: 'GET' })
+  },
+
+  getAllNotifications: async () => {
+    return apiRequest('/notifications', { method: 'GET' })
+  },
+
+  markAsRead: async (id) => {
+    return apiRequest(`/notifications/${id}/read`, { method: 'PUT' })
+  },
+
+  markAllAsRead: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/notifications/read-all${qs}`, { method: 'PUT' })
+  },
+
+  createNotification: async (draft) => {
+    return apiRequest('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(draft),
+    })
+  },
+}
+
+export const recommendationApi = {
+  getMyRecommendations: async (userId, limit = 6) => {
+    const qs = new URLSearchParams()
+    if (userId) qs.append('userId', userId)
+    if (limit) qs.append('limit', limit)
+    const queryString = qs.toString() ? `?${qs.toString()}` : ''
+    return apiRequest(`/recommendations/me${queryString}`, { method: 'GET' })
+  },
+
+  getSimilarBooks: async (title, limit = 4) => {
+    const qs = new URLSearchParams({ title })
+    if (limit) qs.append('limit', limit)
+    return apiRequest(`/recommendations/similar?${qs.toString()}`, { method: 'GET' })
+  },
+
+  getTrending: async (limit = 5) => {
+    const qs = limit ? `?limit=${encodeURIComponent(limit)}` : ''
+    return apiRequest(`/recommendations/trending${qs}`, { method: 'GET' })
+  },
+
+  getPreferences: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/recommendations/preferences/me${qs}`, { method: 'GET' })
+  },
+
+  savePreferences: async (preferences) => {
+    return apiRequest('/recommendations/preferences', {
+      method: 'POST',
+      body: JSON.stringify(preferences),
+    })
+  },
+}
+
+
 

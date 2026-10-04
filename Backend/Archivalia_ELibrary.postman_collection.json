@@ -658,6 +658,210 @@
           }
         }
       ]
+    },
+    {
+      "name": "8. Notification Service",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/unread-count?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "unread-count"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USR-101\",\n  \"title\": \"Renewal Approved\",\n  \"message\": \"Your loan renewal for The Design of Everyday Things was approved.\",\n  \"type\": \"SYSTEM\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/1/read",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/read-all?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "read-all"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Recommendation Service",
+      "item": [
+        {
+          "name": "Get Personalized Recommendations (USR-101)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Similar Books (Clean Code)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/similar?title=Clean%20Code",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "similar"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "Clean Code"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trending Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/trending",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "trending"]
+            }
+          }
+        },
+        {
+          "name": "Get User Preferences (USR-101)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/preferences/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "preferences", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save User Preferences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USR-101\",\n  \"preferredCategories\": [\"software\", \"ebooks\", \"design\"],\n  \"preferredAuthors\": [\"Robert C. Martin\", \"Don Norman\", \"Donald Knuth\"],\n  \"minRating\": 4\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/preferences",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "preferences"]
+            }
+          }
+        }
+      ]
     }
   ]
 }

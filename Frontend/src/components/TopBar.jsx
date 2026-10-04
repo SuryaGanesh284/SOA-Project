@@ -1,4 +1,4 @@
-function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications, onMenu }) {
+function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications, onMenu, unreadNotes = 0 }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
       <button type="button" onClick={onMenu} aria-label="Open menu" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-ink md:hidden">
@@ -35,9 +35,14 @@ function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifi
         <IconButton label="Settings" onClick={onSettings}>
           <GearIcon />
         </IconButton>
-        <IconButton label="Notifications" onClick={onNotifications}>
-          <BellIcon />
-        </IconButton>
+        <div className="relative">
+          <IconButton label="Notifications" onClick={onNotifications}>
+            <BellIcon />
+          </IconButton>
+          {unreadNotes > 0 ? (
+            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-rose-500 ring-2 ring-white" />
+          ) : null}
+        </div>
       </div>
     </header>
   )

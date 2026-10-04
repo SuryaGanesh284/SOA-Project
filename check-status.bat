@@ -59,5 +59,21 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [8] Checking Backend Notification Service (Port 8085)...
+netstat -ano | findstr /R /C:":8085 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8085
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
+echo [9] Checking Backend Recommendation Service (Port 8086)...
+netstat -ano | findstr /R /C:":8086 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8086
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 echo ======================================================
 pause
