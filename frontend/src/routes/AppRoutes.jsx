@@ -9,6 +9,9 @@ import RegisterPage from '../pages/auth/RegisterPage';
 import UserDashboardPage from '../pages/user/UserDashboardPage';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 
+import ProtectedRoute from './ProtectedRoute';
+import RoleRoute from './RoleRoute';
+
 function AppRoutes() {
   return (
     <Routes>
@@ -18,9 +21,18 @@ function AppRoutes() {
       <Route path="/register" element={<RegisterPage />} />
 
       {/* Authenticated user routes — wrapped in app layout shell */}
-      <Route element={<AppLayout />}>
-        <Route path="/user" element={<UserDashboardPage />} />
-        <Route path="/admin" element={<AdminDashboardPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route element={<RoleRoute requiredRole="USER" />}>
+            <Route path="/user" element={<UserDashboardPage />} />
+            <Route path="/user/*" element={<UserDashboardPage />} />
+          </Route>
+
+          <Route element={<RoleRoute requiredRole="ADMIN" />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/*" element={<AdminDashboardPage />} />
+          </Route>
+        </Route>
       </Route>
 
       {/* Catch-all */}

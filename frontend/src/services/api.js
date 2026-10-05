@@ -8,25 +8,27 @@ const api = axios.create({
   },
 });
 
-// ── Request interceptor ─────────────────────────────────────────────────────
-// Attach JWT token from localStorage when available.
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
     }
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// ── Response interceptor ────────────────────────────────────────────────────
-// Centralised error handling; further refined in later phases.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 401 handling (e.g. token expired) will be added in auth phase.
+    // Basic 401 handling - can be expanded later
+    if (error.response && error.response.status === 401) {
+      // Potentially dispatch an event or handle global logout here
+      console.warn('Unauthorized, token may be invalid or expired.');
+    }
     return Promise.reject(error);
   },
 );
