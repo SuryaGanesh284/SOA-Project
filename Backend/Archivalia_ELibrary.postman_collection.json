@@ -862,6 +862,91 @@
           }
         }
       ]
+    },
+    {
+      "name": "10. Resource Discovery & Web Scraping",
+      "item": [
+        {
+          "name": "Search External Repositories (Distributed Systems)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/search?q=Distributed%20Systems",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Distributed Systems"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Scrape Web Page Metadata (JSoup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://pages.cs.wisc.edu/~remzi/OSTEP/\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/scrape-url",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "scrape-url"]
+            }
+          }
+        },
+        {
+          "name": "Import Discovered Book to Catalog",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Designing Data-Intensive Applications\",\n  \"author\": \"Martin Kleppmann\",\n  \"year\": 2017,\n  \"category\": \"ebooks\",\n  \"description\": \"Architecture of reliable, scalable, and maintainable systems.\",\n  \"swatch\": \"from-rose-500 to-red-950\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/import",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "import"]
+            }
+          }
+        },
+        {
+          "name": "Get Catalog Ingestion Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/jobs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "jobs"]
+            }
+          }
+        }
+      ]
     }
   ]
 }

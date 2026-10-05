@@ -301,5 +301,33 @@ export const recommendationApi = {
   },
 }
 
+export const discoveryApi = {
+  search: async (query = '', source = 'ALL') => {
+    const qs = new URLSearchParams()
+    if (query) qs.append('q', query)
+    if (source) qs.append('source', source)
+    const queryString = qs.toString() ? `?${qs.toString()}` : ''
+    return apiRequest(`/discovery/search${queryString}`, { method: 'GET' })
+  },
+
+  scrapeUrl: async (url) => {
+    return apiRequest('/discovery/scrape-url', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    })
+  },
+
+  importToCatalog: async (bookData) => {
+    return apiRequest('/discovery/import', {
+      method: 'POST',
+      body: JSON.stringify(bookData),
+    })
+  },
+
+  getJobs: async () => {
+    return apiRequest('/discovery/jobs', { method: 'GET' })
+  },
+}
+
 
 

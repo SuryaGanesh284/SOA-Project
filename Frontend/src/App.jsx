@@ -6,6 +6,7 @@ import AdminRequirements from './components/AdminRequirements.jsx'
 import AdminCopies from './components/AdminCopies.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import AdminUsers from './components/AdminUsers.jsx'
+import AdminDiscovery from './components/AdminDiscovery.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
@@ -28,7 +29,7 @@ import { fetchNotificationsFromBackend, loadNotifications, markAllNotificationsR
 import { clearSession, loadSession, register, saveSession, signIn } from './data/session.js'
 import { authApi } from './services/api.js'
 
-const adminOnlySections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'requirements']
+const adminOnlySections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'requirements', 'discovery']
 const adminAllowedSections = [...adminOnlySections, 'fines', 'profile']
 
 function guardSection(role, sectionId) {
@@ -191,6 +192,13 @@ function App() {
                 requirements={requirements}
                 onChange={setRequirements}
                 onFulfill={async (requirementId) => setRequirements(await fulfillRequirementAsync(requirements, requirementId))}
+              />
+            ) : session?.role === 'ADMIN' && section === 'discovery' ? (
+              <AdminDiscovery
+                onCatalogRefresh={async () => {
+                  const refreshed = await fetchCatalogFromBackend()
+                  if (refreshed && refreshed.length > 0) setBooks(refreshed)
+                }}
               />
             ) : selectedBook ? (
               <ResourceDetail

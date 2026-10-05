@@ -75,5 +75,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
-echo ======================================================
-pause
+echo [10] Checking Backend Discovery Service (Port 8087)...
+netstat -ano | findstr /R /C:":8087 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8087
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
+if "%1" neq "--no-pause" pause
+

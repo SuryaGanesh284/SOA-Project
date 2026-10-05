@@ -44,6 +44,7 @@ const adminSections = [
       { id: 'borrows', label: 'Borrows', icon: 'book' },
       { id: 'fines', label: 'Fines', icon: 'document' },
       { id: 'requirements', label: 'Requirements', icon: 'document' },
+      { id: 'discovery', label: 'Web Discovery', icon: 'spark' },
     ],
   },
 ]

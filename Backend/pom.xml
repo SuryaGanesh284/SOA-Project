@@ -22,6 +22,7 @@
         <module>fine-service</module>
         <module>notification-service</module>
         <module>recommendation-service</module>
+        <module>discovery-service</module>
     </modules>
 
     <properties>

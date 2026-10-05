@@ -152,7 +152,8 @@ function AdminDashboard({ books, loans, fines, requirements = [], onSelectSectio
                      svc === 'borrow-service' ? 'Port 8083' :
                      svc === 'fine-service' ? 'Port 8084' :
                      svc === 'notification-service' ? 'Port 8085' :
-                     svc === 'recommendation-service' ? 'Port 8086' : 'Active'}
+                     svc === 'recommendation-service' ? 'Port 8086' :
+                     svc === 'discovery-service' ? 'Port 8087' : 'Active'}
                   </p>
                 </div>
                 <span className="inline-flex rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">

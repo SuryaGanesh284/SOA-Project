@@ -150,6 +150,21 @@ public class AdminDashboardController {
             servicesStatus.put("recommendation-service", "DEGRADED");
         }
 
+        try {
+            Map<?, ?> health = restClient.get()
+                    .uri("http://localhost:8087/actuator/health")
+                    .retrieve()
+                    .body(Map.class);
+            if (health != null && "UP".equals(health.get("status"))) {
+                servicesStatus.put("discovery-service", "UP");
+            } else {
+                servicesStatus.put("discovery-service", "DEGRADED");
+            }
+        } catch (Exception e) {
+            log.warn("Could not query discovery-service: {}", e.getMessage());
+            servicesStatus.put("discovery-service", "DEGRADED");
+        }
+
         AdminDashboardDto dto = new AdminDashboardDto(
                 titles,
                 totalCopies,
