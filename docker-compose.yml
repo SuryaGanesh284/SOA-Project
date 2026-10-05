@@ -1,0 +1,289 @@
+services:
+  # ============================================================
+  # 1. Database Tier: MySQL 8.0 Engine
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: elibrary-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Surya_285888
+      MYSQL_DATABASE: elibrary_auth
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSurya_285888"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 2. Service Discovery Tier: Netflix Eureka Server (:8761)
+  # ============================================================
+  eureka-server:
+    build:
+      context: ./Backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: elibrary-eureka
+    restart: on-failure
+    ports:
+      - "8761:8761"
+    environment:
+      - SERVER_PORT=8761
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 3. API Gateway Tier: Spring Cloud Gateway (:8080)
+  # ============================================================
+  api-gateway:
+    build:
+      context: ./Backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: elibrary-gateway
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8080
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 4. Auth & User Management Service (:8081)
+  # ============================================================
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+      dockerfile: Dockerfile
+    container_name: elibrary-auth
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 5. Book & Catalog Management Service (:8082)
+  # ============================================================
+  book-service:
+    build:
+      context: ./Backend/book-service
+      dockerfile: Dockerfile
+    container_name: elibrary-books
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 6. Borrow & Circulation Service (:8083)
+  # ============================================================
+  borrow-service:
+    build:
+      context: ./Backend/borrow-service
+      dockerfile: Dockerfile
+    container_name: elibrary-borrows
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 7. Fine & Payment Service (:8084)
+  # ============================================================
+  fine-service:
+    build:
+      context: ./Backend/fine-service
+      dockerfile: Dockerfile
+    container_name: elibrary-fines
+    restart: on-failure
+    ports:
+      - "8084:8084"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8084
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 8. Notification & Alerts Service (:8085)
+  # ============================================================
+  notification-service:
+    build:
+      context: ./Backend/notification-service
+      dockerfile: Dockerfile
+    container_name: elibrary-notifications
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8085
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 9. Recommendation & Personalization Service (:8086)
+  # ============================================================
+  recommendation-service:
+    build:
+      context: ./Backend/recommendation-service
+      dockerfile: Dockerfile
+    container_name: elibrary-recommendations
+    restart: on-failure
+    ports:
+      - "8086:8086"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8086
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 10. Resource Discovery & Web Scraping Service (:8087)
+  # ============================================================
+  discovery-service:
+    build:
+      context: ./Backend/discovery-service
+      dockerfile: Dockerfile
+    container_name: elibrary-discovery
+    restart: on-failure
+    ports:
+      - "8087:8087"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8087
+      - SPRING_PROFILES_ACTIVE=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Surya_285888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 11. Presentation Tier: React 19 Frontend Web Portal (:5173)
+  # ============================================================
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: elibrary-frontend
+    restart: on-failure
+    ports:
+      - "5173:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - elibrary-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  elibrary-network:
+    driver: bridge
