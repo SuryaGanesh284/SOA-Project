@@ -329,5 +329,27 @@ export const discoveryApi = {
   },
 }
 
+export const aiApi = {
+  getHealth: async () => {
+    return apiRequest('/ai/health', { method: 'GET' })
+  },
+
+  submitResearchQuery: async ({ query, academicField, difficultyLevel, userId }) => {
+    return apiRequest('/ai/research-assist', {
+      method: 'POST',
+      body: JSON.stringify({ query, academicField, difficultyLevel, userId }),
+    })
+  },
+
+  getResearchHistory: async (userId) => {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+    return apiRequest(`/ai/research-assist/history${qs}`, { method: 'GET' })
+  },
+
+  getResearchSession: async (id) => {
+    return apiRequest(`/ai/research-assist/${id}`, { method: 'GET' })
+  },
+}
+
 
 

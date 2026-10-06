@@ -45,6 +45,7 @@ const adminSections = [
       { id: 'fines', label: 'Fines', icon: 'document' },
       { id: 'requirements', label: 'Requirements', icon: 'document' },
       { id: 'discovery', label: 'Web Discovery', icon: 'spark' },
+      { id: 'ai-research', label: 'AI Research Assistant', icon: 'spark' },
     ],
   },
 ]
@@ -67,12 +68,20 @@ function Sidebar({ activeId, onSelect, onAccount, onSignOut, user, activeLoan, o
 
       <nav className="min-h-0 flex-1 overflow-y-auto pb-2" aria-label="Library">
         {user?.role === 'ADMIN' ? null : (
-          <NavButton
-            active={activeId === 'discover'}
-            icon="spark"
-            label="Discover"
-            onClick={() => onSelect('discover')}
-          />
+          <>
+            <NavButton
+              active={activeId === 'discover'}
+              icon="spark"
+              label="Discover"
+              onClick={() => onSelect('discover')}
+            />
+            <NavButton
+              active={activeId === 'ai-research'}
+              icon="spark"
+              label="AI Research"
+              onClick={() => onSelect('ai-research')}
+            />
+          </>
         )}
 
         {(user?.role === 'ADMIN' ? adminSections : sections).map((section) => (

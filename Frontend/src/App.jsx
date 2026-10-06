@@ -7,6 +7,7 @@ import AdminCopies from './components/AdminCopies.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import AdminUsers from './components/AdminUsers.jsx'
 import AdminDiscovery from './components/AdminDiscovery.jsx'
+import AiResearchAssistant from './components/AiResearchAssistant.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
@@ -30,7 +31,7 @@ import { clearSession, loadSession, register, saveSession, signIn } from './data
 import { authApi } from './services/api.js'
 
 const adminOnlySections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'requirements', 'discovery']
-const adminAllowedSections = [...adminOnlySections, 'fines', 'profile']
+const adminAllowedSections = [...adminOnlySections, 'fines', 'profile', 'ai-research']
 
 function guardSection(role, sectionId) {
   if (role === 'ADMIN') {
@@ -198,6 +199,14 @@ function App() {
                 onCatalogRefresh={async () => {
                   const refreshed = await fetchCatalogFromBackend()
                   if (refreshed && refreshed.length > 0) setBooks(refreshed)
+                }}
+              />
+            ) : section === 'ai-research' ? (
+              <AiResearchAssistant
+                user={session || profile}
+                onSearchKeyword={(keyword) => {
+                  setQuery(keyword)
+                  setSectionId('discover')
                 }}
               />
             ) : selectedBook ? (
