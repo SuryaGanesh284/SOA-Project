@@ -83,5 +83,13 @@ if %errorlevel% equ 0 (
     echo    STATUS: [STOPPED]
 )
 echo.
+echo [11] Checking AI Intelligence Services (Port 8088)...
+netstat -ano | findstr /R /C:":8088 " >nul
+if %errorlevel% equ 0 (
+    echo    STATUS: [RUNNING] -^> http://localhost:8088
+) else (
+    echo    STATUS: [STOPPED]
+)
+echo.
 if "%1" neq "--no-pause" pause
 
