@@ -95,7 +95,8 @@ public class GeminiApiClient {
         Map<String, Object> genConfig = new HashMap<>();
         genConfig.put("temperature", 0.4);
         genConfig.put("topP", 0.95);
-        genConfig.put("maxOutputTokens", 2048);
+        genConfig.put("maxOutputTokens", 4096);
+        genConfig.put("thinkingConfig", Map.of("thinkingBudget", 0));
         if (jsonMode) {
             genConfig.put("responseMimeType", "application/json");
         }
@@ -119,8 +120,14 @@ public class GeminiApiClient {
             if (candidates.isArray() && !candidates.isEmpty()) {
                 JsonNode parts = candidates.get(0).path("content").path("parts");
                 if (parts.isArray() && !parts.isEmpty()) {
-                    String text = parts.get(0).path("text").asText("");
-                    
+                    StringBuilder textBuilder = new StringBuilder();
+                    for (JsonNode part : parts) {
+                        if (!part.path("thought").asBoolean(false)) {
+                            textBuilder.append(part.path("text").asText(""));
+                        }
+                    }
+                    String text = textBuilder.toString();
+
                     int promptTokens = root.path("usageMetadata").path("promptTokenCount").asInt(0);
                     int candidateTokens = root.path("usageMetadata").path("candidatesTokenCount").asInt(0);
 
