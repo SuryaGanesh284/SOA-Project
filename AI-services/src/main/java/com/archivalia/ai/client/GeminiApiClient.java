@@ -50,26 +50,32 @@ public class GeminiApiClient {
     }
 
     private GenerateResult generate(String prompt, boolean jsonMode, String systemInstruction) {
-        // Try Primary Model
+        // Try Primary Model with automatic retry on transient 503/429
         try {
             log.info("Dispatching prompt to primary Gemini model: {}", config.getModel());
             return executeCall(config.getModel(), prompt, jsonMode, systemInstruction, false);
         } catch (Exception ex) {
-            log.warn("Primary model {} call failed: {}. Attempting fallback model: {}",
-                    config.getModel(), ex.getMessage(), config.getFallbackModel());
-            // Try Fallback Model
+            log.warn("Primary model {} attempt failed: {}. Retrying in 1.5s...", config.getModel(), ex.getMessage());
             try {
-                return executeCall(config.getFallbackModel(), prompt, jsonMode, systemInstruction, true);
-            } catch (Exception fallbackEx) {
-                log.error("Fallback model {} also failed: {}", config.getFallbackModel(), fallbackEx.getMessage());
-                return new GenerateResult(
-                        "Unable to complete AI generation at this moment due to upstream API unavailability: " + fallbackEx.getMessage(),
-                        config.getFallbackModel(),
-                        true,
-                        0,
-                        0,
-                        false
-                );
+                Thread.sleep(1500);
+                return executeCall(config.getModel(), prompt, jsonMode, systemInstruction, false);
+            } catch (Exception retryEx) {
+                log.warn("Primary model {} retry failed: {}. Attempting fallback model: {}",
+                        config.getModel(), retryEx.getMessage(), config.getFallbackModel());
+                // Try Fallback Model
+                try {
+                    return executeCall(config.getFallbackModel(), prompt, jsonMode, systemInstruction, true);
+                } catch (Exception fallbackEx) {
+                    log.error("Fallback model {} also failed: {}", config.getFallbackModel(), fallbackEx.getMessage());
+                    return new GenerateResult(
+                            "Unable to complete AI generation at this moment due to upstream API unavailability: " + fallbackEx.getMessage(),
+                            config.getFallbackModel(),
+                            true,
+                            0,
+                            0,
+                            false
+                    );
+                }
             }
         }
     }
@@ -96,7 +102,9 @@ public class GeminiApiClient {
         genConfig.put("temperature", 0.4);
         genConfig.put("topP", 0.95);
         genConfig.put("maxOutputTokens", 4096);
-        genConfig.put("thinkingConfig", Map.of("thinkingBudget", 0));
+        if (model.contains("3.5-flash") && !model.contains("lite")) {
+            genConfig.put("thinkingConfig", Map.of("thinkingBudget", 0));
+        }
         if (jsonMode) {
             genConfig.put("responseMimeType", "application/json");
         }

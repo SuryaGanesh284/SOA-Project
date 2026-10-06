@@ -2,11 +2,10 @@ package com.archivalia.ai.controller;
 
 import com.archivalia.ai.client.GeminiApiClient;
 import com.archivalia.ai.config.GeminiConfig;
-import com.archivalia.ai.dto.AiTestRequest;
-import com.archivalia.ai.dto.AiTestResponse;
-import com.archivalia.ai.dto.ResearchAssistRequest;
-import com.archivalia.ai.dto.ResearchAssistResponse;
+import com.archivalia.ai.dto.*;
 import com.archivalia.ai.service.AcademicResearchService;
+import com.archivalia.ai.service.BookSynopsisService;
+import com.archivalia.ai.service.SemanticSearchService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +21,20 @@ public class AiController {
     private final GeminiApiClient geminiApiClient;
     private final GeminiConfig geminiConfig;
     private final AcademicResearchService researchService;
+    private final SemanticSearchService semanticSearchService;
+    private final BookSynopsisService synopsisService;
 
-    public AiController(GeminiApiClient geminiApiClient, GeminiConfig geminiConfig, AcademicResearchService researchService) {
+    public AiController(
+            GeminiApiClient geminiApiClient,
+            GeminiConfig geminiConfig,
+            AcademicResearchService researchService,
+            SemanticSearchService semanticSearchService,
+            BookSynopsisService synopsisService) {
         this.geminiApiClient = geminiApiClient;
         this.geminiConfig = geminiConfig;
         this.researchService = researchService;
+        this.semanticSearchService = semanticSearchService;
+        this.synopsisService = synopsisService;
     }
 
     @GetMapping("/health")
@@ -62,6 +70,8 @@ public class AiController {
         return ResponseEntity.ok(response);
     }
 
+    // --- Feature 1: Academic Research Assistant ---
+
     @PostMapping("/research-assist")
     public ResponseEntity<ResearchAssistResponse> researchAssist(@Valid @RequestBody ResearchAssistRequest request) {
         ResearchAssistResponse response = researchService.solveProblem(request);
@@ -79,5 +89,26 @@ public class AiController {
     public ResponseEntity<ResearchAssistResponse> getResearchSession(@PathVariable Long id) {
         ResearchAssistResponse response = researchService.getSessionById(id);
         return ResponseEntity.ok(response);
+    }
+
+    // --- Feature 2: Deep Semantic Book Search & Synopsis Engine ---
+
+    @PostMapping("/semantic-search")
+    public ResponseEntity<SemanticSearchResponse> semanticSearch(@Valid @RequestBody SemanticSearchRequest request) {
+        SemanticSearchResponse response = semanticSearchService.search(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/synopsis")
+    public ResponseEntity<BookSynopsisResponse> generateSynopsis(@Valid @RequestBody BookSynopsisRequest request) {
+        BookSynopsisResponse response = synopsisService.generateOrGetSynopsis(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/synopsis/{identifier}")
+    public ResponseEntity<BookSynopsisResponse> getSynopsisByIdentifier(@PathVariable String identifier) {
+        return synopsisService.getSynopsisByIdentifier(identifier)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -349,6 +349,26 @@ export const aiApi = {
   getResearchSession: async (id) => {
     return apiRequest(`/ai/research-assist/${id}`, { method: 'GET' })
   },
+
+  semanticSearch: async (query, catalogContext = null, limit = 5) => {
+    return apiRequest('/ai/semantic-search', {
+      method: 'POST',
+      body: JSON.stringify({ query, catalogContext, limit }),
+    })
+  },
+
+  getSynopsis: async ({ title, author, isbn, category }) => {
+    return apiRequest('/ai/synopsis', {
+      method: 'POST',
+      body: JSON.stringify({ title, author, isbn, category }),
+    })
+  },
+
+  getSynopsisByIdentifier: async (identifier) => {
+    return apiRequest(`/ai/synopsis/${encodeURIComponent(identifier)}`, {
+      method: 'GET',
+    })
+  },
 }
 
 
