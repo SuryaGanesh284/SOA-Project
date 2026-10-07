@@ -369,6 +369,38 @@ export const aiApi = {
       method: 'GET',
     })
   },
+
+  getStudyPack: async ({ bookTitle, author, isbn, topicOrExamFocus, difficultyLevel, forceRefresh = false }) => {
+    return apiRequest('/ai/study-pack', {
+      method: 'POST',
+      body: JSON.stringify({ bookTitle, author, isbn, topicOrExamFocus, difficultyLevel, forceRefresh }),
+    })
+  },
+
+  getStudyPackById: async (id) => {
+    return apiRequest(`/ai/study-pack/${id}`, {
+      method: 'GET',
+    })
+  },
+
+  getStudyPackByIsbn: async (isbn) => {
+    return apiRequest(`/ai/study-pack/by-isbn/${encodeURIComponent(isbn)}`, {
+      method: 'GET',
+    })
+  },
+
+  evaluateStudyPackQuiz: async ({ studyPackId, answers }) => {
+    return apiRequest('/ai/study-pack/evaluate', {
+      method: 'POST',
+      body: JSON.stringify({ studyPackId, answers }),
+    })
+  },
+
+  getRecentStudyPacks: async () => {
+    return apiRequest('/ai/study-pack/recent', {
+      method: 'GET',
+    })
+  },
 }
 
 

@@ -54,6 +54,7 @@ function App() {
   const [notesOpen, setNotesOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notes, setNotes] = useState(() => loadNotifications())
+  const [aiInitialBook, setAiInitialBook] = useState(null)
   const [profile, setProfile] = useState(() => {
     const current = loadSession()
     return {
@@ -204,6 +205,7 @@ function App() {
             ) : section === 'ai-research' ? (
               <AiResearchAssistant
                 user={session || profile}
+                initialBook={aiInitialBook}
                 onSearchKeyword={(keyword) => {
                   setQuery(keyword)
                   setSectionId('discover')
@@ -214,6 +216,11 @@ function App() {
                 book={selectedBook}
                 loans={loans}
                 onBack={() => setSelectedTitle(null)}
+                onOpenStudyPack={(book) => {
+                  setAiInitialBook(book)
+                  setSelectedTitle(null)
+                  setSectionId('ai-research')
+                }}
                 onBorrow={async () => {
                   const result = await borrowTitleAsync(loans, selectedBook.title, session || profile)
                   if (result.loans) setLoans(result.loans)

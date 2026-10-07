@@ -1,7 +1,7 @@
 import { formatOf } from '../data/catalog.js'
 import { copyStatus } from '../data/loans.js'
 
-function ResourceDetail({ book, loans, onBack, onBorrow }) {
+function ResourceDetail({ book, loans, onBack, onBorrow, onOpenStudyPack }) {
   const copies = book.copies.map((copy) => ({ ...copy, status: copyStatus(copy, loans) }))
   const available = copies.filter((copy) => copy.status === 'AVAILABLE').length
 
@@ -27,14 +27,23 @@ function ResourceDetail({ book, loans, onBack, onBorrow }) {
           <p className="mt-4 text-sm font-medium">
             {available} of {book.copies.length} available
           </p>
-          <button
-            type="button"
-            onClick={onBorrow}
-            disabled={available === 0}
-            className="mt-4 h-10 rounded-xl bg-navy px-4 text-sm font-medium text-white disabled:opacity-40"
-          >
-            {available === 0 ? 'No copies available' : 'Borrow'}
-          </button>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onBorrow}
+              disabled={available === 0}
+              className="h-10 rounded-xl bg-navy px-4 text-sm font-medium text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-40"
+            >
+              {available === 0 ? 'No copies available' : 'Borrow'}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenStudyPack && onOpenStudyPack(book)}
+              className="h-10 rounded-xl border border-purple-200 bg-purple-50 px-4 text-sm font-medium text-purple-700 shadow-xs transition hover:bg-purple-100 flex items-center gap-1.5"
+            >
+              <span>📚 AI Study Pack & Quiz</span>
+            </button>
+          </div>
         </div>
       </div>
 

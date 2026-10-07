@@ -53,8 +53,46 @@ const DIFFICULTY_LEVELS = [
   'PhD / Research',
 ]
 
-export default function AiResearchAssistant({ user, onSearchKeyword }) {
-  const [activeTab, setActiveTab] = useState('solve') // 'solve' | 'semantic'
+const PRESET_STUDY_PACKS = [
+  {
+    title: 'Designing Data-Intensive Applications',
+    author: 'Martin Kleppmann',
+    isbn: '978-1449373320',
+    topic: 'Distributed Transactions, Raft Consensus & Replication Lag',
+    level: 'Postgraduate',
+  },
+  {
+    title: 'Operating Systems: Three Easy Pieces',
+    author: 'Remzi Arpaci-Dusseau & Andrea Arpaci-Dusseau',
+    isbn: '978-1985086593',
+    topic: 'Virtual Memory Paging, TLB Invalidation & Semaphores',
+    level: 'Undergraduate',
+  },
+  {
+    title: 'Introduction to Algorithms (CLRS)',
+    author: 'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein',
+    isbn: '978-0262033848',
+    topic: 'Dynamic Programming, Bellman-Ford & NP-Completeness',
+    level: 'Postgraduate',
+  },
+  {
+    title: 'Computer Networking: A Top-Down Approach',
+    author: 'James Kurose & Keith Ross',
+    isbn: '978-0133594140',
+    topic: 'TCP Congestion Control, BGP Autonomous Routing & TLS Handshakes',
+    level: 'Undergraduate',
+  },
+  {
+    title: 'Structure and Interpretation of Computer Programs (SICP)',
+    author: 'Harold Abelson & Gerald Jay Sussman',
+    isbn: '978-0262510875',
+    topic: 'Metalinguistic Abstraction, Environments & Lazy Evaluation',
+    level: 'PhD / Research',
+  },
+]
+
+export default function AiResearchAssistant({ user, onSearchKeyword, initialBook }) {
+  const [activeTab, setActiveTab] = useState('solve') // 'solve' | 'semantic' | 'studypack'
 
   // Feature 1 State (Research Solver)
   const [query, setQuery] = useState('')
@@ -74,6 +112,21 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
   const [selectedSynopsis, setSelectedSynopsis] = useState(null)
   const [synopsisLoading, setSynopsisLoading] = useState(false)
 
+  // Feature 3 State (Study Packs & Interactive Quiz)
+  const [studyTitle, setStudyTitle] = useState('Designing Data-Intensive Applications')
+  const [studyAuthor, setStudyAuthor] = useState('Martin Kleppmann')
+  const [studyIsbn, setStudyIsbn] = useState('978-1449373320')
+  const [studyTopic, setStudyTopic] = useState('Distributed Transactions, Raft Consensus & Replication Lag')
+  const [studyLevel, setStudyLevel] = useState('Postgraduate')
+  const [studyLoading, setStudyLoading] = useState(false)
+  const [studyPack, setStudyPack] = useState(null)
+  const [studyError, setStudyError] = useState(null)
+  const [userAnswers, setUserAnswers] = useState({})
+  const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [evaluating, setEvaluating] = useState(false)
+  const [evaluationResult, setEvaluationResult] = useState(null)
+  const [recentStudyPacks, setRecentStudyPacks] = useState([])
+
   // Shared State
   const [healthStatus, setHealthStatus] = useState(null)
 
@@ -82,18 +135,36 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
   useEffect(() => {
     checkHealth()
     loadHistory()
+    loadRecentStudyPacks()
   }, [])
 
   useEffect(() => {
+    if (initialBook && initialBook.title) {
+      setActiveTab('studypack')
+      setStudyTitle(initialBook.title)
+      setStudyAuthor(initialBook.author || '')
+      setStudyIsbn(initialBook.isbn || '')
+      setStudyTopic('')
+      handleGenerateStudyPack(null, {
+        title: initialBook.title,
+        author: initialBook.author || '',
+        isbn: initialBook.isbn || '',
+        topic: '',
+        level: studyLevel,
+      })
+    }
+  }, [initialBook])
+
+  useEffect(() => {
     let timer
-    if (loading || semanticLoading || synopsisLoading) {
+    if (loading || semanticLoading || synopsisLoading || studyLoading || evaluating) {
       setElapsedSecs(0)
       timer = setInterval(() => {
         setElapsedSecs((prev) => prev + 1)
       }, 1000)
     }
     return () => clearInterval(timer)
-  }, [loading, semanticLoading, synopsisLoading])
+  }, [loading, semanticLoading, synopsisLoading, studyLoading, evaluating])
 
   const checkHealth = async () => {
     const res = await aiApi.getHealth()
@@ -103,6 +174,15 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
   const loadHistory = async () => {
     const res = await aiApi.getResearchHistory(userId)
     if (res.data && Array.isArray(res.data)) setHistory(res.data)
+  }
+
+  const loadRecentStudyPacks = async () => {
+    try {
+      const res = await aiApi.getRecentStudyPacks()
+      if (res.data && Array.isArray(res.data)) setRecentStudyPacks(res.data)
+    } catch (e) {
+      console.warn('Failed to load recent study packs', e)
+    }
   }
 
   // Feature 1 Submit
@@ -179,6 +259,96 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
     }
   }
 
+  // Feature 3: Dynamic Study Pack Handlers
+  const handleGenerateStudyPack = async (e, overrideParams, forceRefresh = false) => {
+    if (e) e.preventDefault()
+    const titleToUse = overrideParams?.title || studyTitle
+    const authorToUse = overrideParams?.author || studyAuthor
+    const isbnToUse = overrideParams?.isbn || studyIsbn
+    const topicToUse = overrideParams?.topic !== undefined ? overrideParams.topic : studyTopic
+    const levelToUse = overrideParams?.level || studyLevel
+
+    if (!titleToUse.trim()) return
+
+    if (overrideParams) {
+      if (overrideParams.title) setStudyTitle(overrideParams.title)
+      if (overrideParams.author !== undefined) setStudyAuthor(overrideParams.author)
+      if (overrideParams.isbn !== undefined) setStudyIsbn(overrideParams.isbn)
+      if (overrideParams.topic !== undefined) setStudyTopic(overrideParams.topic)
+      if (overrideParams.level) setStudyLevel(overrideParams.level)
+    }
+
+    setStudyLoading(true)
+    setStudyError(null)
+    setUserAnswers({})
+    setQuizSubmitted(false)
+    setEvaluationResult(null)
+
+    try {
+      const res = await aiApi.getStudyPack({
+        bookTitle: titleToUse.trim(),
+        author: authorToUse ? authorToUse.trim() : '',
+        isbn: isbnToUse ? isbnToUse.trim() : '',
+        topicOrExamFocus: topicToUse ? topicToUse.trim() : '',
+        difficultyLevel: levelToUse,
+        forceRefresh,
+      })
+
+      if (res.error) {
+        setStudyError(res.error)
+      } else if (res.data) {
+        setStudyPack(res.data)
+        loadRecentStudyPacks()
+      }
+    } catch (err) {
+      setStudyError(err.message || 'Failed to synthesize study pack')
+    } finally {
+      setStudyLoading(false)
+    }
+  }
+
+  const handleSelectAnswer = (questionNumber, optionIndex) => {
+    if (quizSubmitted) return
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionNumber]: optionIndex,
+    }))
+  }
+
+  const handleSubmitQuiz = async () => {
+    if (!studyPack?.id) return
+    setEvaluating(true)
+    try {
+      const res = await aiApi.evaluateStudyPackQuiz({
+        studyPackId: studyPack.id,
+        answers: userAnswers,
+      })
+      if (res.data) {
+        setEvaluationResult(res.data)
+        setQuizSubmitted(true)
+      }
+    } catch (err) {
+      console.error('Quiz evaluation failed', err)
+    } finally {
+      setEvaluating(false)
+    }
+  }
+
+  const handleResetQuiz = () => {
+    setUserAnswers({})
+    setQuizSubmitted(false)
+    setEvaluationResult(null)
+  }
+
+  const handleOpenStudyPackForBook = (title, author, isbn) => {
+    setActiveTab('studypack')
+    setStudyTitle(title || '')
+    setStudyAuthor(author || '')
+    setStudyIsbn(isbn || '')
+    setStudyTopic('')
+    handleGenerateStudyPack(null, { title, author, isbn, topic: '', level: studyLevel })
+  }
+
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-slate-50/60 p-6">
       {/* Top Banner */}
@@ -232,6 +402,19 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
         >
           <span>🔍 Deep Semantic Search & Synopses</span>
           <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 font-medium">Feature 2</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('studypack')}
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 text-xs font-semibold transition ${
+            activeTab === 'studypack'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <span>📚 Study Packs & Interactive Quizzes</span>
+          <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] text-purple-700 font-medium">Feature 3</span>
         </button>
       </div>
 
@@ -732,11 +915,21 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="border-t border-slate-100 px-6 py-3 flex justify-end">
+                <div className="border-t border-slate-100 px-6 py-3 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOpenStudyPackForBook(selectedSynopsis.title, selectedSynopsis.author, selectedSynopsis.isbn)
+                      setSelectedSynopsis(null)
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-purple-700 transition"
+                  >
+                    <span>📚 Generate Study Pack & Quiz</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setSelectedSynopsis(null)}
-                    className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                   >
                     Close Synopsis
                   </button>
@@ -746,6 +939,507 @@ export default function AiResearchAssistant({ user, onSearchKeyword }) {
           )}
         </div>
       )}
+
+      {/* TAB 3: DYNAMIC STUDY PACKS & INTERACTIVE REVISION QUIZZES */}
+      {activeTab === 'studypack' && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Left Column (5 cols) */}
+          <div className="flex flex-col gap-6 lg:col-span-5">
+            {/* Textbook Presets */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Popular Academic Textbooks</h3>
+              <div className="flex flex-col gap-2">
+                {PRESET_STUDY_PACKS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setStudyTitle(preset.title)
+                      setStudyAuthor(preset.author)
+                      setStudyIsbn(preset.isbn)
+                      setStudyTopic(preset.topic)
+                      setStudyLevel(preset.level)
+                    }}
+                    className="group rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-left transition hover:border-purple-300 hover:bg-purple-50/40"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs font-bold text-slate-800 group-hover:text-purple-900">{preset.title}</p>
+                      <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200">
+                        {preset.level}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-500">By {preset.author}</p>
+                    <p className="mt-1 text-[11px] text-purple-700 font-medium">Focus: {preset.topic}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Study Pack Generator Form */}
+            <form onSubmit={(e) => handleGenerateStudyPack(e, null, false)} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Study Pack Parameters</h3>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-700">Book Title *</label>
+                  <input
+                    type="text"
+                    value={studyTitle}
+                    onChange={(e) => setStudyTitle(e.target.value)}
+                    placeholder="e.g. Designing Data-Intensive Applications"
+                    required
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Author(s)</label>
+                    <input
+                      type="text"
+                      value={studyAuthor}
+                      onChange={(e) => setStudyAuthor(e.target.value)}
+                      placeholder="e.g. Martin Kleppmann"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">ISBN (Optional)</label>
+                    <input
+                      type="text"
+                      value={studyIsbn}
+                      onChange={(e) => setStudyIsbn(e.target.value)}
+                      placeholder="e.g. 978-1449373320"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-700">Recitation / Exam Focus Topic</label>
+                  <input
+                    type="text"
+                    value={studyTopic}
+                    onChange={(e) => setStudyTopic(e.target.value)}
+                    placeholder="e.g. Distributed Consensus, Raft vs Paxos, Replication Lag"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-700">Target Academic Rigor</label>
+                  <select
+                    value={studyLevel}
+                    onChange={(e) => setStudyLevel(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                  >
+                    {DIFFICULTY_LEVELS.map((lvl) => (
+                      <option key={lvl} value={lvl}>{lvl}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={studyLoading || !studyTitle.trim()}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {studyLoading ? (
+                    <>
+                      <span className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Synthesizing Study Pack ({elapsedSecs}s)...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✦ Synthesize Dynamic Study Pack & Quiz</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Recently Generated Study Packs */}
+            {recentStudyPacks.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Recently Generated Study Packs</h3>
+                <div className="space-y-2">
+                  {recentStudyPacks.map((pack) => (
+                    <button
+                      key={pack.id}
+                      type="button"
+                      onClick={() => {
+                        setStudyPack(pack)
+                        setStudyTitle(pack.bookTitle)
+                        setStudyAuthor(pack.author || '')
+                        setStudyIsbn(pack.isbn || '')
+                        setStudyTopic(pack.topicOrExamFocus || '')
+                        setUserAnswers({})
+                        setQuizSubmitted(false)
+                        setEvaluationResult(null)
+                      }}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 text-left transition hover:border-purple-200 hover:bg-purple-50/30"
+                    >
+                      <p className="text-xs font-bold text-slate-800">{pack.bookTitle}</p>
+                      <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                        <span>{pack.author || 'Academic'}</span>
+                        <span className="rounded-sm bg-purple-50 px-1 text-purple-700">{pack.difficultyLevel || 'Intermediate'}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column (7 cols) - Study Pack Results */}
+          <div className="flex flex-col gap-6 lg:col-span-7">
+            {studyLoading && (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-purple-200 bg-linear-to-b from-purple-50/50 to-white p-12 text-center shadow-xs">
+                <div className="relative mb-4 flex size-14 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-md animate-pulse">
+                  <span className="text-2xl">📚</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-800">Synthesizing Comprehensive Study Pack</h3>
+                <p className="mt-1 max-w-md text-xs text-slate-500">
+                  Google Gemini 3.5 Flash is extracting executive abstracts, formulating mathematical laws, and authoring 5 challenging examination scenario questions...
+                </p>
+                <div className="mt-4 flex items-center gap-2 rounded-full bg-purple-100/80 px-3.5 py-1 text-xs font-medium text-purple-800">
+                  <span className="size-2 animate-ping rounded-full bg-purple-600" />
+                  <span>Elapsed: {elapsedSecs}s</span>
+                </div>
+              </div>
+            )}
+
+            {studyError && !studyLoading && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-900 shadow-xs">
+                <div className="flex items-center gap-2 font-bold text-sm text-rose-800">
+                  <span>⚠️ Study Pack Synthesis Error</span>
+                </div>
+                <p className="mt-2 text-xs text-rose-700">{studyError}</p>
+                <button
+                  type="button"
+                  onClick={(e) => handleGenerateStudyPack(e, null, true)}
+                  className="mt-3 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition"
+                >
+                  Retry with Force Refresh
+                </button>
+              </div>
+            )}
+
+            {!studyPack && !studyLoading && !studyError && (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+                <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-purple-50 text-2xl text-purple-600">
+                  📚
+                </div>
+                <h3 className="text-base font-bold text-slate-800">Dynamic Academic Study Pack Engine</h3>
+                <p className="mt-1 max-w-md text-xs text-slate-500">
+                  Select a textbook preset from the left panel or enter any book title to dynamically synthesize high-yield formulas, core principles, and an interactive 5-question exam revision quiz.
+                </p>
+              </div>
+            )}
+
+            {studyPack && !studyLoading && (
+              <div className="space-y-6">
+                {/* Header Metadata Card */}
+                <div className="rounded-2xl border border-purple-100 bg-linear-to-r from-purple-50/70 via-indigo-50/40 to-white p-5 shadow-xs">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="rounded-lg bg-purple-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs">
+                          Study Pack
+                        </span>
+                        <span className="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                          {studyPack.difficultyLevel || 'Postgraduate'}
+                        </span>
+                        {studyPack.cached ? (
+                          <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                            <span>⚡ Served from Local AI Cache</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                            <span>✨ Freshly Synthesized via {studyPack.modelUsed || 'gemini-3.5-flash'}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <h2 className="mt-2.5 text-lg font-bold text-slate-900">{studyPack.bookTitle}</h2>
+                      {studyPack.author && <p className="text-xs text-slate-600 font-medium">By {studyPack.author}</p>}
+                      {studyPack.topicOrExamFocus && (
+                        <p className="mt-1 text-xs text-purple-800 font-medium">
+                          Exam Focus: <span className="text-slate-800 font-normal">{studyPack.topicOrExamFocus}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleGenerateStudyPack(e, null, true)}
+                      className="shrink-0 flex items-center gap-1.5 rounded-xl border border-purple-200 bg-white px-3 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-50 transition shadow-xs"
+                    >
+                      <span>🔄 Force Refresh</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Section 1: Executive Academic Abstract */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs">
+                      §1
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-800">Executive Academic Abstract</h3>
+                  </div>
+                  <div className="prose prose-sm text-xs leading-relaxed text-slate-700 whitespace-pre-line">
+                    {studyPack.executiveSummary}
+                  </div>
+                </div>
+
+                {/* Section 2: High-Yield Principles */}
+                {studyPack.highYieldPrinciples && studyPack.highYieldPrinciples.length > 0 && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 font-bold text-xs">
+                        §2
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-800">High-Yield Theoretical Principles</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {studyPack.highYieldPrinciples.map((principle, idx) => (
+                        <div key={idx} className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 text-xs text-slate-800">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-purple-100 font-bold text-purple-700 text-[10px]">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-relaxed">{principle}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 3: Formulae, Algorithms & Mathematical Bounds */}
+                {studyPack.formulaeOrAlgorithms && studyPack.formulaeOrAlgorithms.length > 0 && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 font-bold text-xs">
+                        §3
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-800">Formulae, Algorithms & Complexity Bounds</h3>
+                    </div>
+                    <div className="space-y-2.5">
+                      {studyPack.formulaeOrAlgorithms.map((formula, idx) => (
+                        <div key={idx} className="rounded-xl border border-slate-800 bg-slate-900 p-3.5 font-mono text-xs text-emerald-300 shadow-inner">
+                          <span className="text-slate-400 select-none mr-2 font-sans font-bold">[{idx + 1}]</span>
+                          {formula}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 4: Prerequisites & Industry Applications */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {/* Prerequisites */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-amber-500 font-bold text-sm">✦</span>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">Foundation Prerequisites</h4>
+                    </div>
+                    <ul className="space-y-2 text-xs text-slate-700">
+                      {studyPack.prerequisites?.map((pre, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-1 size-1.5 rounded-full bg-amber-500 shrink-0" />
+                          <span>{pre}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Industry Applications */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-indigo-500 font-bold text-sm">⚡</span>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">Real-World Industry Applications</h4>
+                    </div>
+                    <ul className="space-y-2 text-xs text-slate-700">
+                      {studyPack.realWorldApplications?.map((app, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-1 size-1.5 rounded-full bg-indigo-500 shrink-0" />
+                          <span>{app}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Section 5: Interactive 5-Question Revision Quiz */}
+                {studyPack.quizQuestions && studyPack.quizQuestions.length > 0 && (
+                  <div className="rounded-2xl border-2 border-purple-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs">
+                            §5
+                          </span>
+                          <h3 className="text-sm font-bold text-slate-900">Interactive Revision & Exam Quiz</h3>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Solve these 5 conceptual scenarios. Choose an option for each question and submit for instant grading and detailed pedagogical explanations.
+                        </p>
+                      </div>
+
+                      {quizSubmitted && (
+                        <button
+                          type="button"
+                          onClick={handleResetQuiz}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                        >
+                          🔄 Retake Quiz
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Quiz Evaluation Banner */}
+                    {quizSubmitted && evaluationResult && (
+                      <div className="mb-6 rounded-2xl border border-purple-200 bg-linear-to-r from-purple-50 via-indigo-50/50 to-white p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Academic Evaluation Result</span>
+                            <h4 className="text-lg font-bold text-slate-900">{evaluationResult.performanceTier}</h4>
+                            <p className="mt-1 text-xs text-slate-600 max-w-xl leading-relaxed">{evaluationResult.feedback}</p>
+                          </div>
+                          <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-xs ring-1 ring-purple-100 min-w-32">
+                            <span className="text-2xl font-black text-purple-700">
+                              {evaluationResult.correctCount} / {evaluationResult.totalQuestions}
+                            </span>
+                            <span className="text-[11px] font-semibold text-slate-500">
+                              {evaluationResult.scorePercentage}% Score
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 5 Questions */}
+                    <div className="space-y-6">
+                      {studyPack.quizQuestions.map((q) => {
+                        const userChoice = userAnswers[q.questionNumber]
+                        const isAnswered = userChoice !== undefined
+                        const evalDetail = evaluationResult?.details?.find((d) => d.questionNumber === q.questionNumber)
+
+                        return (
+                          <div key={q.questionNumber} className="rounded-xl border border-slate-200 bg-slate-50/40 p-5">
+                            {/* Question Header */}
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-xs font-bold text-slate-500">
+                                Question {q.questionNumber} of {studyPack.quizQuestions.length}
+                              </span>
+                              {q.conceptTested && (
+                                <span className="rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-200/50">
+                                  Concept: {q.conceptTested}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Question Text */}
+                            <p className="text-xs font-semibold text-slate-800 leading-relaxed mb-4">
+                              {q.question}
+                            </p>
+
+                            {/* 4 Options */}
+                            <div className="grid grid-cols-1 gap-2.5">
+                              {q.options?.map((opt, optIdx) => {
+                                const optionLetter = String.fromCharCode(65 + optIdx)
+                                const isSelected = userChoice === optIdx
+                                const isCorrectAnswer = q.correctAnswerIndex === optIdx
+
+                                let optionStyles = 'border-slate-200 bg-white text-slate-800 hover:border-purple-300 hover:bg-purple-50/30'
+
+                                if (!quizSubmitted) {
+                                  if (isSelected) {
+                                    optionStyles = 'border-purple-600 bg-purple-50 text-purple-950 ring-2 ring-purple-500/20 font-medium'
+                                  }
+                                } else {
+                                  if (isCorrectAnswer) {
+                                    optionStyles = 'border-emerald-500 bg-emerald-50/80 text-emerald-950 font-bold ring-2 ring-emerald-500/30'
+                                  } else if (isSelected && !isCorrectAnswer) {
+                                    optionStyles = 'border-rose-400 bg-rose-50 text-rose-950 font-medium ring-2 ring-rose-400/30 line-through decoration-rose-400'
+                                  } else {
+                                    optionStyles = 'border-slate-100 bg-slate-50/50 text-slate-400 opacity-70'
+                                  }
+                                }
+
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    disabled={quizSubmitted}
+                                    onClick={() => handleSelectAnswer(q.questionNumber, optIdx)}
+                                    className={`flex items-start gap-3 rounded-xl border p-3 text-left text-xs transition ${optionStyles}`}
+                                  >
+                                    <span className={`flex size-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${
+                                      isSelected ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      {optionLetter}
+                                    </span>
+                                    <span className="flex-1 leading-snug">{opt}</span>
+                                    {quizSubmitted && isCorrectAnswer && (
+                                      <span className="shrink-0 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                        ✓ Correct
+                                      </span>
+                                    )}
+                                    {quizSubmitted && isSelected && !isCorrectAnswer && (
+                                      <span className="shrink-0 rounded-md bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                        ✗ Selected
+                                      </span>
+                                    )}
+                                  </button>
+                                )
+                              })}
+                            </div>
+
+                            {/* Technical Explanation (Shown when submitted) */}
+                            {quizSubmitted && q.explanation && (
+                              <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5 text-xs text-indigo-950">
+                                <span className="font-bold text-indigo-900 block mb-1">💡 Pedagogical Rationale:</span>
+                                <p className="leading-relaxed text-[11px] text-slate-700">{q.explanation}</p>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Quiz Submit Bar */}
+                    {!quizSubmitted && (
+                      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100 pt-4">
+                        <div className="text-xs text-slate-500">
+                          <span className="font-bold text-slate-800">{Object.keys(userAnswers).length}</span> of {studyPack.quizQuestions.length} questions answered
+                        </div>
+                        <button
+                          type="button"
+                          disabled={evaluating || Object.keys(userAnswers).length === 0}
+                          onClick={handleSubmitQuiz}
+                          className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-purple-700 transition disabled:opacity-50"
+                        >
+                          {evaluating ? (
+                            <>
+                              <span className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              <span>Evaluating Responses...</span>
+                            </>
+                          ) : (
+                            <span>Submit Quiz for Academic Evaluation</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

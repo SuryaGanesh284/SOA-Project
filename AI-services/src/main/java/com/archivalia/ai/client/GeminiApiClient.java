@@ -45,6 +45,10 @@ public class GeminiApiClient {
         return generate(prompt, true, null);
     }
 
+    public GenerateResult generateJson(String prompt, String systemInstruction) {
+        return generate(prompt, true, systemInstruction);
+    }
+
     public GenerateResult generateWithSystemInstruction(String systemInstruction, String userPrompt, boolean jsonMode) {
         return generate(userPrompt, jsonMode, systemInstruction);
     }
