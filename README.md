@@ -8,9 +8,9 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8.svg)](https://tailwindcss.com/)
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose%20v2-2496ed.svg)](https://www.docker.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-00758f.svg)](https://www.mysql.com/)
-[![E2E Verification](https://img.shields.io/badge/E2E%20Tests-13%2F13%20PASSED-success.svg)](verify-e2e.js)
+[![E2E Verification](https://img.shields.io/badge/E2E%20Tests-15%2F15%20PASSED-success.svg)](verify-e2e.js)
 
-Archivalia is an enterprise-grade, cloud-native Academic E-Library and Circulation Management Platform designed under the **PS038 Service-Oriented Architecture (SOA)** specification. The system is architected as an event-driven, decoupled microservices ecosystem featuring Netflix Eureka service discovery, Spring Cloud API Gateway, JWT security, Razorpay sandbox payment processing, an AI-powered topic affinity recommendation engine, and a live JSoup web scraping discovery pipeline.
+Archivalia is an enterprise-grade, cloud-native Academic E-Library and Circulation Management Platform designed under the **PS038 Service-Oriented Architecture (SOA)** specification. The system is architected as an event-driven, decoupled microservices ecosystem featuring Netflix Eureka service discovery, Spring Cloud API Gateway, JWT security, Razorpay sandbox payment processing, an AI-powered topic affinity recommendation engine, a live JSoup web scraping discovery pipeline, and a dedicated **Google Gemini AI Intelligence Suite**.
 
 ---
 
@@ -33,6 +33,7 @@ flowchart TD
         Notification["Notification Service (:8085)<br/>Alerts, Activity Feed"]
         Recommendation["Recommendation Service (:8086)<br/>Affinity AI Algorithm"]
         Discovery["Discovery Service (:8087)<br/>JSoup Scraper, Open Library"]
+        AIService["AI-services (:8088)<br/>Gemini 3.5 Flash Suite"]
     end
 
     Gateway --> Auth
@@ -42,6 +43,7 @@ flowchart TD
     Gateway --> Notification
     Gateway --> Recommendation
     Gateway --> Discovery
+    Gateway --> AIService
 
     Auth -.->|Register & Heartbeat| Eureka
     Book -.->|Register & Heartbeat| Eureka
@@ -50,10 +52,13 @@ flowchart TD
     Notification -.->|Register & Heartbeat| Eureka
     Recommendation -.->|Register & Heartbeat| Eureka
     Discovery -.->|Register & Heartbeat| Eureka
+    AIService -.->|Register & Heartbeat| Eureka
 
     Discovery -->|1-Click Ingest POST| Book
     Borrow -->|Inter-service Availability Check| Book
     Fine -->|Loan Audit Sync| Borrow
+    AIService -->|Inventory Fetch| Book
+    AIService -->|Velocity Sync| Borrow
 
     subgraph DataTier ["Dual Persistence Layer"]
         MySQL[("MySQL 8.0 Databases<br/>Port 3306")]
@@ -67,6 +72,7 @@ flowchart TD
     Notification --- DataTier
     Recommendation --- DataTier
     Discovery --- DataTier
+    AIService --- DataTier
 ```
 
 ---
@@ -85,6 +91,7 @@ flowchart TD
 | 8 | **Notification Service** | `8085` | `elibrary_notifications` | Push alerts, loan due reminders, return acknowledgments, activity feed |
 | 9 | **Recommendation Service** | `8086` | `elibrary_recommendations` | User preference profiling, genre affinity scoring, personalized feeds |
 | 10 | **Discovery Service** | `8087` | `elibrary_discovery` | Open Library API search, JSoup live URL scraping, 1-click catalog import |
+| 11 | **AI Intelligence Services** | `8088` | `elibrary_ai` | Google Gemini 3.5 Flash: Academic Research Assistant, Semantic Search, Study Packs & Quizzes, Restock Forecaster |
 
 ---
 
@@ -196,9 +203,11 @@ node verify-e2e.js
 [PASS] Test 11: AI Content/Affinity Recommendation Engine (6 personalized suggestions generated)
 [PASS] Test 12: Resource Discovery & JSoup Web Scraper (Scraped: "Service-oriented architecture - Wikipedia")
 [PASS] Test 13: Admin Dashboard KPI Aggregation & Health (9/9 microservices UP)
+[PASS] Test 14: Archivalia AI Intelligence Services Health (Model: gemini-3.5-flash, Port 8088 UP)
+[PASS] Test 15: AI Predictive Circulation & Restock Forecaster (Health: "Severe Exam Surge & Bottleneck", 10 titles analyzed)
 
 ======================================================================
-SUCCESS: All 13/13 E2E Test Cases PASSED!
+SUCCESS: All 15/15 E2E Test Cases PASSED!
 Microservices Ecosystem is 100% verified and operational.
 ======================================================================
 ```
@@ -224,9 +233,10 @@ Microservices Ecosystem is 100% verified and operational.
    - **Fines & Settlements**: Review late return fines. Click **"Pay Fine"** to trigger the Razorpay Sandbox modal, simulate payment, and watch balance update to 0.
    - **For You**: View recommendations tailored to your borrowing history and adjust preferred genre chips.
    - **Notifications**: Click the top bell icon to view real-time due reminders and mark them as read.
+   - **AI Research Assistant**: Click "AI Research Assistant" in the sidebar to solve academic problems, perform deep semantic book search, or generate study packs and practice quizzes.
 3. **Administrator Experience**:
    - Login as `admin@archivalia.test` / `admin123`.
-   - **Admin Dashboard**: Inspect live aggregated KPIs (Total Titles, Copies, Loans, Outstanding Fines) and the **Microservices Ecosystem Health Matrix** showing all 9 microservices as `UP`.
+   - **Admin Dashboard**: Inspect live aggregated KPIs, the **Microservices Ecosystem Health Matrix**, and the **AI Predictive Restock & Demand Forecaster** card. Click **"+ Order Requisition"** to requisition new copies.
    - **Web Discovery & Scraper**: Search Open Library for publications or enter any web page URL to scrape OpenGraph metadata with JSoup, then click **"Confirm One-Click Ingestion to Catalog"** to dynamically register new book copies.
 
 ---
@@ -239,7 +249,7 @@ A ready-to-use Postman collection is located at:
 **How to test in Postman**:
 1. Open Postman -> Click **Import** (top left).
 2. Select `Backend/Archivalia_ELibrary.postman_collection.json`.
-3. The collection contains 10 folders with preconfigured requests covering every microservice endpoint through Gateway `:8080`.
+3. The collection contains folders with preconfigured requests covering every microservice endpoint through Gateway `:8080`.
 4. Click **Send** on any request to view live JSON responses.
 
 ---
@@ -257,6 +267,7 @@ All external HTTP requests route through the Spring Cloud API Gateway on port `8
 | `/api/v1/notifications/**` | `notification-service` | `lb://notification-service` | `8085` |
 | `/api/v1/recommendations/**` | `recommendation-service` | `lb://recommendation-service` | `8086` |
 | `/api/v1/discovery/**` | `discovery-service` | `lb://discovery-service` | `8087` |
+| `/api/v1/ai/**` | `ai-service` | `lb://ai-service` | `8088` |
 
 ---
 
@@ -264,13 +275,13 @@ All external HTTP requests route through the Spring Cloud API Gateway on port `8
 
 ```
 SOA Project/
-├── docker-compose.yml              # Unified multi-container deployment
+├── docker-compose.yml              # Unified 12-service multi-container deployment
 ├── .dockerignore                   # Docker build exclusions
-├── check-status.bat                # 10-Service Port & Health Auditor
+├── check-status.bat                # 11-Service Port & Health Auditor
 ├── start-all-services.bat          # 1-Click Native Service Launcher
 ├── stop-all-services.bat           # 1-Click Native Service Terminator
 ├── start-mysql.bat                 # Administrator UAC MySQL80 starter
-├── verify-e2e.js                   # Automated 13-Test-Case Verification Suite
+├── verify-e2e.js                   # Automated 15-Test-Case Verification Suite
 ├── README.md                       # Master Architecture & Evaluation Guide
 ├── docker/
 │   └── mysql-init.sql              # MySQL multi-database bootstrap script
@@ -278,8 +289,12 @@ SOA Project/
 │   ├── Dockerfile                  # Multi-stage production Nginx container
 │   ├── nginx.conf                  # Nginx reverse proxy configuration
 │   └── src/
-│       ├── components/             # Reusable UI modules (Admin, Catalog, Fines, etc.)
+│       ├── components/             # Reusable UI modules (Admin, Catalog, Fines, AI Suite)
 │       └── services/api.js         # Unified Axios / Fetch Gateway REST Client
+├── AI-services/                    # Dedicated Port 8088 AI Intelligence Microservice
+│   ├── Dockerfile                  # Java 21 container specification
+│   ├── pom.xml                     # Spring Boot 3.3.4 + Eureka Client + Gemini Client
+│   └── src/                        # 4 Core AI Features & Econometric Queuing Models
 └── Backend/                        # Spring Boot 3.3.4 Multi-Module Workspace
     ├── pom.xml                     # Parent POM with Spring Cloud 2023.0.3
     ├── Archivalia_ELibrary.postman_collection.json # Complete Postman test collection
@@ -299,13 +314,14 @@ SOA Project/
 ## 11. PS038 Academic Evaluation Compliance
 
 This project satisfies all requirements specified in the **PS038 Enterprise Academic E-Library System** problem statement:
-- [x] **Modular Microservices Architecture**: 9 discrete backend services with single responsibility principle.
+- [x] **Modular Microservices Architecture**: Discrete backend services adhering strictly to the single responsibility principle.
 - [x] **Service Discovery & Registry**: Dynamic registration and heartbeat health via Netflix Eureka.
 - [x] **API Gateway Pattern**: Central routing, CORS handling, and unified ingress through Spring Cloud Gateway.
 - [x] **Secure Authentication & RBAC**: Stateless BCrypt password hashing and role-based JWT claims.
 - [x] **End-to-End Circulation**: Complete loan creation, duration tracking, return processing, and copy availability restoration.
 - [x] **Financial Processing**: Real-time overdue fine calculations and Razorpay payment gateway simulation.
-- [x] **Smart Features**: Content/affinity-based AI recommendations and live JSoup HTML web scraping.
+- [x] **Smart Features**: Content/affinity-based recommendations and live JSoup HTML web scraping.
+- [x] **Enterprise AI Intelligence Suite**: Dedicated port 8088 microservice integrating Google Gemini 3.5 Flash for academic problem solving, semantic book search, study packs/quizzes, and econometric circulation restock forecasting.
 - [x] **Dual Persistence Layer**: Dual-profile architecture supporting zero-configuration in-memory H2 and production MySQL 8.0.
 - [x] **Containerization**: Standard Dockerfiles for all microservices and unified Docker Compose orchestration.
-- [x] **Automated Quality Assurance**: 100% passing automated E2E test suite (`verify-e2e.js`) and Postman collection.
+- [x] **Automated Quality Assurance**: 100% passing automated 15-test-case E2E test suite (`verify-e2e.js`) and Postman collection.

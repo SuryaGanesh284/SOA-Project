@@ -264,7 +264,29 @@ services:
       - elibrary-network
 
   # ============================================================
-  # 11. Presentation Tier: React 19 Frontend Web Portal (:5173)
+  # 11. AI Intelligence Suite Service (:8088)
+  # ============================================================
+  ai-service:
+    build:
+      context: ./AI-services
+      dockerfile: Dockerfile
+    container_name: elibrary-ai
+    restart: on-failure
+    ports:
+      - "8088:8088"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SERVER_PORT=8088
+      - SPRING_PROFILES_ACTIVE=default
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    networks:
+      - elibrary-network
+
+  # ============================================================
+  # 12. Presentation Tier: React 19 Frontend Web Portal (:5173)
   # ============================================================
   frontend:
     build:

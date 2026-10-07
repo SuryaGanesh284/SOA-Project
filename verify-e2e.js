@@ -1,7 +1,7 @@
 /**
  * Archivalia Enterprise Academic E-Library System (PS038)
  * Automated End-to-End Microservices Verification Suite
- * Tests all 13 core workflows through API Gateway (Port 8080)
+ * Tests all 15 core workflows through API Gateway (Port 8080)
  */
 
 const GATEWAY_URL = 'http://localhost:8080/api/v1';
@@ -231,6 +231,32 @@ async function runSuite() {
     }
   } catch (e) {
     logFail('Test 13: Admin Dashboard KPI Aggregation & Health', e.message);
+  }
+
+  // Test 14: AI Intelligence Suite Gateway Health & Gemini Connectivity
+  totalTests++;
+  try {
+    const res = await request('/ai/health');
+    if (res.ok && res.data.status === 'UP' && res.data.apiKeyConfigured) {
+      logPass('Test 14: Archivalia AI Intelligence Services Health', `Model: ${res.data.configuredModel}, Port 8088 UP`);
+    } else {
+      throw new Error('AI health check failed or API key not configured');
+    }
+  } catch (e) {
+    logFail('Test 14: Archivalia AI Intelligence Services Health', e.message);
+  }
+
+  // Test 15: AI Predictive Restock & Circulation Forecaster
+  totalTests++;
+  try {
+    const res = await request('/ai/predictive-demand');
+    if (res.ok && res.data.overallCirculationHealth && Array.isArray(res.data.items) && res.data.items.length > 0) {
+      logPass('Test 15: AI Predictive Circulation & Restock Forecaster', `Health: "${res.data.overallCirculationHealth}", ${res.data.items.length} titles analyzed`);
+    } else {
+      throw new Error('Predictive demand report failed or returned empty items');
+    }
+  } catch (e) {
+    logFail('Test 15: AI Predictive Circulation & Restock Forecaster', e.message);
   }
 
   console.log('\n======================================================================');
