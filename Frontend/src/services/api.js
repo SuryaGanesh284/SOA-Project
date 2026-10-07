@@ -43,6 +43,20 @@ export async function apiRequest(endpoint, options = {}) {
 
     return { data, status: response.status }
   } catch (err) {
+    if (endpoint.startsWith('/ai')) {
+      try {
+        const directUrl = `http://localhost:8088/api/v1${endpoint}`
+        const directResp = await fetch(directUrl, config)
+        const isJson = (directResp.headers.get('content-type') || '').includes('application/json')
+        const directData = isJson ? await directResp.json() : await directResp.text()
+        if (!directResp.ok) {
+          return { error: directData?.error || directData?.message || `Request failed with status ${directResp.status}` }
+        }
+        return { data: directData, status: directResp.status }
+      } catch (fallbackErr) {
+        return { error: 'Network error or AI service is unavailable.', details: fallbackErr.message }
+      }
+    }
     return { error: 'Network error or backend is unavailable.', details: err.message }
   }
 }

@@ -72,13 +72,16 @@ public class StudyPackService {
               ]
             }
             Ensure exactly 5 rigorous quiz questions in 'quizQuestions', each with 4 distinct options and an accurate 0-based correctAnswerIndex (0, 1, 2, or 3).
+            Format all mathematical formulas and asymptotic bounds using plain-text notations (e.g. O(V + E), O(N log N), Theta(N^2)) without raw LaTeX backslashes.
             Do not output any markdown code fences or conversational text outside the JSON.
             """;
 
     public StudyPackService(GeminiApiClient geminiApiClient, StudyPackRepository repository, ObjectMapper objectMapper) {
         this.geminiApiClient = geminiApiClient;
         this.repository = repository;
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy()
+                .configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true)
+                .configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
     }
 
     @Transactional
@@ -321,6 +324,9 @@ public class StudyPackService {
         if (trimmed.endsWith("```")) {
             trimmed = trimmed.substring(0, trimmed.length() - 3);
         }
-        return trimmed.trim();
+        String clean = trimmed.trim();
+        // Replace single backslashes that are not followed by valid JSON escape characters with double backslashes
+        clean = clean.replaceAll("(?<!\\\\)\\\\(?![\"\\\\/bfnrt]|u[0-9a-fA-F]{4})", "\\\\\\\\");
+        return clean;
     }
 }
