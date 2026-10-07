@@ -415,6 +415,19 @@ export const aiApi = {
       method: 'GET',
     })
   },
+
+  getPredictiveDemandReport: async (forceRefresh = false) => {
+    const qs = forceRefresh ? '?forceRefresh=true' : ''
+    return apiRequest(`/ai/predictive-demand${qs}`, {
+      method: 'GET',
+    })
+  },
+
+  refreshPredictiveDemandReport: async () => {
+    return apiRequest('/ai/predictive-demand/refresh', {
+      method: 'POST',
+    })
+  },
 }
 
 

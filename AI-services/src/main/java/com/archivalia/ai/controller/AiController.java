@@ -5,6 +5,7 @@ import com.archivalia.ai.config.GeminiConfig;
 import com.archivalia.ai.dto.*;
 import com.archivalia.ai.service.AcademicResearchService;
 import com.archivalia.ai.service.BookSynopsisService;
+import com.archivalia.ai.service.PredictiveDemandService;
 import com.archivalia.ai.service.SemanticSearchService;
 import com.archivalia.ai.service.StudyPackService;
 import jakarta.validation.Valid;
@@ -24,6 +25,7 @@ public class AiController {
     private final SemanticSearchService semanticSearchService;
     private final BookSynopsisService synopsisService;
     private final StudyPackService studyPackService;
+    private final PredictiveDemandService predictiveDemandService;
 
     public AiController(
             GeminiApiClient geminiApiClient,
@@ -31,13 +33,15 @@ public class AiController {
             AcademicResearchService researchService,
             SemanticSearchService semanticSearchService,
             BookSynopsisService synopsisService,
-            StudyPackService studyPackService) {
+            StudyPackService studyPackService,
+            PredictiveDemandService predictiveDemandService) {
         this.geminiApiClient = geminiApiClient;
         this.geminiConfig = geminiConfig;
         this.researchService = researchService;
         this.semanticSearchService = semanticSearchService;
         this.synopsisService = synopsisService;
         this.studyPackService = studyPackService;
+        this.predictiveDemandService = predictiveDemandService;
     }
 
     @GetMapping("/health")
@@ -147,5 +151,20 @@ public class AiController {
     public ResponseEntity<List<StudyPackResponse>> getRecentStudyPacks() {
         List<StudyPackResponse> recent = studyPackService.getRecentStudyPacks();
         return ResponseEntity.ok(recent);
+    }
+
+    // --- Feature 4: Admin Predictive Demand & Restock Forecaster ---
+
+    @GetMapping("/predictive-demand")
+    public ResponseEntity<PredictiveDemandReportResponse> getPredictiveDemand(
+            @RequestParam(defaultValue = "false") boolean forceRefresh) {
+        PredictiveDemandReportResponse response = predictiveDemandService.generateOrGetReport(forceRefresh);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/predictive-demand/refresh")
+    public ResponseEntity<PredictiveDemandReportResponse> refreshPredictiveDemand() {
+        PredictiveDemandReportResponse response = predictiveDemandService.generateOrGetReport(true);
+        return ResponseEntity.ok(response);
     }
 }

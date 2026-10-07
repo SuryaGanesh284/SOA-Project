@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { aiApi } from '../services/api'
+import { aiApi, requirementsApi } from '../services/api'
 
 const PRESET_QUERIES = [
   {
@@ -126,6 +126,12 @@ export default function AiResearchAssistant({ user, onSearchKeyword, initialBook
   const [evaluating, setEvaluating] = useState(false)
   const [evaluationResult, setEvaluationResult] = useState(null)
   const [recentStudyPacks, setRecentStudyPacks] = useState([])
+
+  // Feature 4 State (Predictive Demand & Restock Forecaster)
+  const [demandReport, setDemandReport] = useState(null)
+  const [demandLoading, setDemandLoading] = useState(false)
+  const [demandError, setDemandError] = useState(null)
+  const [requisitionStatus, setRequisitionStatus] = useState({})
 
   // Shared State
   const [healthStatus, setHealthStatus] = useState(null)
@@ -349,6 +355,39 @@ export default function AiResearchAssistant({ user, onSearchKeyword, initialBook
     handleGenerateStudyPack(null, { title, author, isbn, topic: '', level: studyLevel })
   }
 
+  // Feature 4: Predictive Demand Forecaster Handlers
+  const handleFetchDemandReport = async (forceRefresh = false) => {
+    setDemandLoading(true)
+    setDemandError(null)
+    try {
+      const res = await aiApi.getPredictiveDemandReport(forceRefresh)
+      if (res.error) {
+        setDemandError(res.error)
+      } else if (res.data) {
+        setDemandReport(res.data)
+      }
+    } catch (err) {
+      setDemandError(err.message || 'Failed to generate predictive demand forecast')
+    } finally {
+      setDemandLoading(false)
+    }
+  }
+
+  const handleOrderRequisition = async (item, idx) => {
+    try {
+      setRequisitionStatus((prev) => ({ ...prev, [idx]: 'loading' }))
+      const note = `AI Requisition: +${item.recommendedRequisitionCopies} copies (${item.academicRationale})`
+      await requirementsApi.addRequirement({
+        title: `${item.bookTitle} (+${item.recommendedRequisitionCopies} Copies)`,
+        note,
+      })
+      setRequisitionStatus((prev) => ({ ...prev, [idx]: 'done' }))
+    } catch (e) {
+      console.error('Failed to create requisition', e)
+      setRequisitionStatus((prev) => ({ ...prev, [idx]: 'error' }))
+    }
+  }
+
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-slate-50/60 p-6">
       {/* Top Banner */}
@@ -415,6 +454,24 @@ export default function AiResearchAssistant({ user, onSearchKeyword, initialBook
         >
           <span>📚 Study Packs & Interactive Quizzes</span>
           <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] text-purple-700 font-medium">Feature 3</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('demand')
+            if (!demandReport && !demandLoading) {
+              handleFetchDemandReport(false)
+            }
+          }}
+          className={`flex items-center gap-2 border-b-2 px-5 py-3 text-xs font-semibold transition ${
+            activeTab === 'demand'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <span>📈 Circulation Demand & Restock Forecaster</span>
+          <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] text-rose-700 font-medium">Feature 4</span>
         </button>
       </div>
 
@@ -1435,6 +1492,202 @@ export default function AiResearchAssistant({ user, onSearchKeyword, initialBook
                   </div>
                 )}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: CIRCULATION DEMAND & RESTOCK FORECASTER */}
+      {activeTab === 'demand' && (
+        <div className="flex flex-col gap-6">
+          {/* Header Card */}
+          <div className="rounded-2xl border-2 border-rose-200 bg-white p-6 shadow-xs">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-8 items-center justify-center rounded-xl bg-rose-600 text-white font-bold text-sm shadow-xs">
+                    ✦
+                  </span>
+                  <h2 className="text-lg font-bold text-slate-900">AI Predictive Restock & Circulation Forecaster</h2>
+                  {demandReport?.overallCirculationHealth && (
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      demandReport.overallCirculationHealth.toLowerCase().includes('severe') || demandReport.overallCirculationHealth.toLowerCase().includes('critical') || demandReport.overallCirculationHealth.toLowerCase().includes('bottleneck')
+                        ? 'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
+                      {demandReport.overallCirculationHealth}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1.5 text-xs text-slate-500 max-w-3xl leading-relaxed">
+                  Empirical econometric queuing modeling (Poisson arrival distributions & Erlang-C blocking probabilities) analyzing catalog scarcity, active student loan velocities, and impending midterm exam surges.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={demandLoading}
+                onClick={() => handleFetchDemandReport(true)}
+                className="flex items-center gap-2 rounded-xl bg-linear-to-r from-rose-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:from-rose-700 hover:to-indigo-700 transition disabled:opacity-50 self-start sm:self-auto"
+              >
+                {demandLoading ? (
+                  <>
+                    <span className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Analyzing Circulation Velocity...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔄 Refresh AI Forecast</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {demandError && (
+              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800">
+                <span className="font-bold">⚠️ Forecast Error: </span> {demandError}
+              </div>
+            )}
+
+            {/* KPI Summary Cards */}
+            {demandReport && (
+              <>
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Critical Stockouts</span>
+                    <p className="mt-1 text-2xl font-black text-rose-800">{demandReport.criticalShortageCount}</p>
+                    <p className="mt-0.5 text-[11px] text-rose-600">0 copies on shelf</p>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">High Surge Risk</span>
+                    <p className="mt-1 text-2xl font-black text-amber-800">{demandReport.highRiskCount}</p>
+                    <p className="mt-0.5 text-[11px] text-amber-600">Imminent queue congestion</p>
+                  </div>
+
+                  <div className="rounded-xl border border-purple-100 bg-purple-50/70 p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Recommended Copies</span>
+                    <p className="mt-1 text-2xl font-black text-purple-800">+{demandReport.totalRecommendedCopies}</p>
+                    <p className="mt-0.5 text-[11px] text-purple-600">Requisitions needed</p>
+                  </div>
+
+                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Est. Requisition Budget</span>
+                    <p className="mt-1 text-2xl font-black text-indigo-800">₹{demandReport.totalEstimatedBudgetInr}</p>
+                    <p className="mt-0.5 text-[11px] text-indigo-600">Procurement allocation</p>
+                  </div>
+                </div>
+
+                {/* Director Synthesis Box */}
+                {demandReport.executiveSummary && (
+                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-xs text-slate-700 leading-relaxed">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                        <span>📋</span> Library Director Econometric Synthesis
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Generated: {demandReport.generatedAt} {demandReport.cached ? '(Cached)' : '(Live)'}
+                      </span>
+                    </div>
+                    <p className="leading-relaxed">{demandReport.executiveSummary}</p>
+                  </div>
+                )}
+
+                {/* Itemized Predictions Table */}
+                {demandReport.items && demandReport.items.length > 0 && (
+                  <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                        <tr>
+                          <th className="py-3 px-4">Catalog Textbook</th>
+                          <th className="py-3 px-4">Available / Total</th>
+                          <th className="py-3 px-4">Active Loans</th>
+                          <th className="py-3 px-4">Surge Probability</th>
+                          <th className="py-3 px-4">Risk Tier</th>
+                          <th className="py-3 px-4">Requisition</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {demandReport.items.map((item, idx) => {
+                          const status = requisitionStatus[idx]
+                          const isCritical = item.stockoutRisk === 'CRITICAL'
+                          const isHigh = item.stockoutRisk === 'HIGH'
+
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50/60 transition">
+                              <td className="py-3 px-4">
+                                <p className="font-bold text-slate-800">{item.bookTitle}</p>
+                                <span className="text-[10px] text-slate-400">{item.category} · {item.isbn || 'No ISBN'}</span>
+                                <p className="mt-1 text-[11px] text-slate-600 max-w-sm italic">
+                                  "{item.academicRationale}"
+                                </p>
+                              </td>
+                              <td className="py-3 px-4 font-semibold">
+                                <span className={item.currentAvailableCopies === 0 ? 'text-rose-600 font-bold' : 'text-slate-800'}>
+                                  {item.currentAvailableCopies}
+                                </span>
+                                <span className="text-slate-400"> / {item.currentTotalCopies}</span>
+                              </td>
+                              <td className="py-3 px-4 text-slate-700 font-medium">
+                                {item.activeBorrowsCount} active
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-16 rounded-full bg-slate-100 overflow-hidden">
+                                    <div
+                                      className={`h-full ${
+                                        item.predictedDemandSurgePercent >= 80 ? 'bg-rose-500' :
+                                        item.predictedDemandSurgePercent >= 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                                      }`}
+                                      style={{ width: `${item.predictedDemandSurgePercent}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-bold text-slate-700">{item.predictedDemandSurgePercent}%</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                                  isCritical ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                                  isHigh ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                  'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                }`}>
+                                  {item.stockoutRisk}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className="font-bold text-purple-700">+{item.recommendedRequisitionCopies} copies</span>
+                                <p className="text-[10px] text-slate-400">₹{item.estimatedBudgetInr}</p>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                {status === 'done' ? (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200">
+                                    ✓ Requisitioned
+                                  </span>
+                                ) : status === 'error' ? (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700">
+                                    Error
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={status === 'loading' || item.recommendedRequisitionCopies === 0}
+                                    onClick={() => handleOrderRequisition(item, idx)}
+                                    className="rounded-lg bg-navy px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-navy-light transition disabled:opacity-40"
+                                  >
+                                    {status === 'loading' ? 'Creating...' : '+ Order Requisition'}
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
