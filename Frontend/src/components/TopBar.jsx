@@ -1,6 +1,17 @@
-function TopBar({ query, onQueryChange, view, onViewChange, onSettings, onNotifications, onMenu, unreadNotes = 0 }) {
+function TopBar({ onHome, query, onQueryChange, view, onViewChange, onSettings, onNotifications, onMenu, unreadNotes = 0 }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4">
+      {onHome ? (
+        <button
+          type="button"
+          onClick={onHome}
+          title="Return to Landing Page"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-field px-3 py-1.5 text-xs font-bold text-slate-700 hover:border-cyan-500 hover:text-cyan-600 transition shrink-0"
+        >
+          <span className="text-cyan-500">✦</span>
+          <span>Home</span>
+        </button>
+      ) : null}
       <button type="button" onClick={onMenu} aria-label="Open menu" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-ink md:hidden">
         <MenuIcon />
       </button>

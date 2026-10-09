@@ -37,6 +37,7 @@ const adminSections = [
     id: 'admin',
     label: 'Administration',
     items: [
+      { id: 'landing', label: '✦ Home / Landing', icon: 'spark' },
       { id: 'dashboard', label: 'Dashboard', icon: 'spark' },
       { id: 'users', label: 'Users', icon: 'document' },
       { id: 'catalog', label: 'Catalog', icon: 'book' },
@@ -69,6 +70,12 @@ function Sidebar({ activeId, onSelect, onAccount, onSignOut, user, activeLoan, o
       <nav className="min-h-0 flex-1 overflow-y-auto pb-2" aria-label="Library">
         {user?.role === 'ADMIN' ? null : (
           <>
+            <NavButton
+              active={activeId === 'landing'}
+              icon="spark"
+              label="✦ Home / Landing"
+              onClick={() => onSelect('landing')}
+            />
             <NavButton
               active={activeId === 'discover'}
               icon="spark"

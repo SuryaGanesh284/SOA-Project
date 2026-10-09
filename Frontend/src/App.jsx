@@ -8,6 +8,7 @@ import AdminDashboard from './components/AdminDashboard.jsx'
 import AdminUsers from './components/AdminUsers.jsx'
 import AdminDiscovery from './components/AdminDiscovery.jsx'
 import AiResearchAssistant from './components/AiResearchAssistant.jsx'
+import LandingPage from './components/LandingPage.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import CategoryPage from './components/CategoryPage.jsx'
 import Collections from './components/Collections.jsx'
@@ -31,9 +32,10 @@ import { clearSession, loadSession, register, saveSession, signIn } from './data
 import { authApi } from './services/api.js'
 
 const adminOnlySections = ['dashboard', 'users', 'catalog', 'copies', 'borrows', 'requirements', 'discovery']
-const adminAllowedSections = [...adminOnlySections, 'fines', 'profile', 'ai-research']
+const adminAllowedSections = [...adminOnlySections, 'fines', 'profile', 'ai-research', 'landing']
 
 function guardSection(role, sectionId) {
+  if (sectionId === 'landing') return 'landing'
   if (role === 'ADMIN') {
     return adminAllowedSections.includes(sectionId) ? sectionId : 'dashboard'
   }
@@ -43,7 +45,7 @@ function guardSection(role, sectionId) {
 function App() {
   const [query, setQuery] = useState('')
   const [view, setView] = useState('grid')
-  const [sectionId, setSectionId] = useState('discover')
+  const [sectionId, setSectionId] = useState('landing')
   const [selectedTitle, setSelectedTitle] = useState(null)
   const [authMode, setAuthMode] = useState(null)
   const [session, setSession] = useState(() => loadSession())
@@ -130,6 +132,35 @@ function App() {
     )
   }
 
+  if (section === 'landing') {
+    return (
+      <LandingPage
+        books={books}
+        user={session}
+        onEnterPortal={(target = 'discover') => chooseSection(target)}
+        onSelectBook={(title) => {
+          setSelectedTitle(title)
+          setSectionId('discover')
+        }}
+        onOpenStudyPack={(book) => {
+          setAiInitialBook(book)
+          setSectionId('ai-research')
+        }}
+        onSignIn={() => setAuthMode('login')}
+        onRegister={() => setAuthMode('register')}
+        onSignOut={() => {
+          clearSession()
+          setSession(null)
+          setSectionId('landing')
+        }}
+        onDemoLogin={async (email, password) => {
+          const res = await signIn(email, password)
+          enter(res)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="flex min-h-svh items-center justify-center bg-canvas p-3 font-sans text-ink sm:p-5 md:p-6">
       <div className="relative flex h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-window bg-white shadow-window sm:h-[calc(100svh-2.5rem)] md:h-[calc(100svh-3rem)]">
@@ -152,6 +183,7 @@ function App() {
         />
         <main aria-label="Library window" className="relative flex min-w-0 flex-1 flex-col bg-white">
           <TopBar
+            onHome={() => chooseSection('landing')}
             onMenu={() => setMenuOpen(true)}
             query={query}
             onQueryChange={(value) => {
