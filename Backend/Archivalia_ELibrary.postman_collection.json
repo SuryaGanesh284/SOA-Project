@@ -1,0 +1,953 @@
+{
+  "info": {
+    "_postman_id": "e-library-ps038-collection",
+    "name": "Archivalia E-Library Microservices",
+    "description": "API requests for PS038 Enterprise Academic E-Library System (API Gateway on port 8080)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. System Health Checks",
+      "item": [
+        {
+          "name": "Eureka Registry Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8761",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Book Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Borrow Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Fine Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8084/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8084",
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Login as USER (Ben Bradle)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set('authToken', data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@archivalia.test\",\n  \"password\": \"user123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login as ADMIN (Library Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@archivalia.test\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register New Student User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Cooper\",\n  \"email\": \"alice@archivalia.test\",\n  \"password\": \"alice123\",\n  \"phone\": \"9876543299\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. User Profile (Protected)",
+      "item": [
+        {
+          "name": "Get Current Profile (requires Bearer token)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/users/me",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Book Catalog & Inventory",
+      "item": [
+        {
+          "name": "Get All Books via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"]
+            }
+          }
+        },
+        {
+          "name": "Search Books by Keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books?q=clean",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "clean"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter Books by Format",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books?format=physical",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "physical"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Book by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/books/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Physical Copies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/copies",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "copies"]
+            }
+          }
+        },
+        {
+          "name": "Update Copy Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"MAINTENANCE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/copies/PHY-015/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "copies", "PHY-015", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Add Inventory Requirement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud Native Patterns\",\n  \"note\": \"Recommended by Distributed Systems Faculty\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Borrow & Circulation",
+      "item": [
+        {
+          "name": "Get All Loans (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows"]
+            }
+          }
+        },
+        {
+          "name": "Get My Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows/my?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows", "my"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrow Book (Checkout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Deep Work\",\n  \"userId\": \"USR-101\",\n  \"userName\": \"Ben Bradle\",\n  \"userEmail\": \"user@archivalia.test\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows"]
+            }
+          }
+        },
+        {
+          "name": "Return Book",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/borrows/1/return",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "borrows", "1", "return"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Fines & Razorpay Payments",
+      "item": [
+        {
+          "name": "Get All Fines (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/fines",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "fines"]
+            }
+          }
+        },
+        {
+          "name": "Get My Fines (Student)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/fines/my?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "fines", "my"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Fine",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USR-101\",\n  \"userName\": \"Ben Bradle\",\n  \"title\": \"Thinking, Fast and Slow\",\n  \"amount\": 35,\n  \"reason\": \"Overdue 3 days\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/fines",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "fines"]
+            }
+          }
+        },
+        {
+          "name": "Pay Fine",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"pay_manual_confirmation_101\",\n  \"method\": \"RAZORPAY_SANDBOX\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/fines/1/pay",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "fines", "1", "pay"]
+            }
+          }
+        },
+        {
+          "name": "Waive Fine (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Exempted by Head Librarian for medical excuse\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/fines/1/waive",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "fines", "1", "waive"]
+            }
+          }
+        },
+        {
+          "name": "Create Razorpay Sandbox Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fineId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/payments/create-order",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "payments", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Verify Razorpay Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fineId\": 1,\n  \"orderId\": \"order_sand_sample_123\",\n  \"paymentId\": \"pay_rzp_sample_success\",\n  \"signature\": \"sig_mock_valid\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/payments/verify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "payments", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Admin Dashboard & Acquisitions",
+      "item": [
+        {
+          "name": "Get Admin Dashboard KPIs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/dashboard",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Acquisition Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Create Acquisition Requirement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud Native Patterns\",\n  \"note\": \"Required for upcoming distributed systems lab\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements"]
+            }
+          }
+        },
+        {
+          "name": "Fulfill Acquisition Requirement",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/admin/inventory/requirements/1/fulfill",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "admin", "inventory", "requirements", "1", "fulfill"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Notification Service",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/unread-count?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "unread-count"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USR-101\",\n  \"title\": \"Renewal Approved\",\n  \"message\": \"Your loan renewal for The Design of Everyday Things was approved.\",\n  \"type\": \"SYSTEM\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/1/read",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/notifications/read-all?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "notifications", "read-all"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Recommendation Service",
+      "item": [
+        {
+          "name": "Get Personalized Recommendations (USR-101)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Similar Books (Clean Code)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/similar?title=Clean%20Code",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "similar"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "Clean Code"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trending Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/trending",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "trending"]
+            }
+          }
+        },
+        {
+          "name": "Get User Preferences (USR-101)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/preferences/me?userId=USR-101",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "preferences", "me"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "USR-101"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save User Preferences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USR-101\",\n  \"preferredCategories\": [\"software\", \"ebooks\", \"design\"],\n  \"preferredAuthors\": [\"Robert C. Martin\", \"Don Norman\", \"Donald Knuth\"],\n  \"minRating\": 4\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/recommendations/preferences",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "recommendations", "preferences"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Resource Discovery & Web Scraping",
+      "item": [
+        {
+          "name": "Search External Repositories (Distributed Systems)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/search?q=Distributed%20Systems",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Distributed Systems"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Scrape Web Page Metadata (JSoup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://pages.cs.wisc.edu/~remzi/OSTEP/\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/scrape-url",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "scrape-url"]
+            }
+          }
+        },
+        {
+          "name": "Import Discovered Book to Catalog",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Designing Data-Intensive Applications\",\n  \"author\": \"Martin Kleppmann\",\n  \"year\": 2017,\n  \"category\": \"ebooks\",\n  \"description\": \"Architecture of reliable, scalable, and maintainable systems.\",\n  \"swatch\": \"from-rose-500 to-red-950\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/import",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "import"]
+            }
+          }
+        },
+        {
+          "name": "Get Catalog Ingestion Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/discovery/jobs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "discovery", "jobs"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
